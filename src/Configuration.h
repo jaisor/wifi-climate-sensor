@@ -6,12 +6,12 @@
 #include <StreamUtils.h>
 
 //#define DEBUG_MOCK_HP
-#define DISABLE_LOGGING
+//#define DISABLE_LOGGING
 #ifndef DISABLE_LOGGING
   #define LOG_LEVEL LOG_LEVEL_VERBOSE
 #endif
 
-//#define WEB_LOGGING
+#define WEB_LOGGING
 #ifdef WEB_LOGGING
   #define WEB_LOG_LEVEL LOG_LEVEL_INFO
 #endif
@@ -24,9 +24,9 @@
 #define FACTORY_RESET_CLEAR_TIMER_MS 2000   // Clear factory reset counter when elapsed, considered smooth boot
 
 #if defined(ESP32)
-  #define DEVICE_NAME "ESP32MHVAC"
+  #define DEVICE_NAME "ESP32CLSEN"
 #elif defined(ESP8266)
-  #define DEVICE_NAME "ESP8266MHVAC"
+  #define DEVICE_NAME "ESP8266CLSEN"
 #endif
 
 #ifdef WIFI
@@ -45,7 +45,7 @@
   #define WEB_SERVER_PORT 80
 #endif
 
-// #define BATTERY_SENSOR  // ADC A0 using 0-3.3v voltage divider
+#define BATTERY_SENSOR  // ADC A0 using 0-3.3v voltage divider
 #ifdef BATTERY_SENSOR
   #define BATTERY_VOLTS_DIVIDER 57.2 // 162.3 - 4.2v max; 57.2 - 14.8v max;
   #if defined(ESP32)
@@ -59,13 +59,14 @@
   #endif
 #endif
 
-// #define TEMP_SENSOR
+#define TEMP_SENSOR
 #ifdef TEMP_SENSOR
   #define TEMP_UNIT_CELSIUS     0
   #define TEMP_UNIT_FAHRENHEIT  1
   //#define TEMP_SENSOR_DS18B20
   //#define TEMP_SENSOR_BME280
-  #define TEMP_SENSOR_DHT
+  //#define TEMP_SENSOR_DHT
+  #define TEMP_SENSOR_AHT
   #ifdef TEMP_SENSOR_DHT
     #define TEMP_SENSOR_DHT_TYPE   DHT22
   #endif
@@ -82,13 +83,11 @@
   #endif
 #endif
 
-#define HVAC_CTRL
-#ifdef HVAC_CTRL
-  #define TEMP_UNIT_CELSIUS     0
-  #define TEMP_UNIT_FAHRENHEIT  1
-#endif
-
 #define INTERNAL_LED_PIN LED_BUILTIN
+
+#define DEEP_SLEEP_INTERVAL_SEC 300 // 5 min
+#define BATTERY_VOLTS_DIVIDER 162.3 // 162.3 - LiPo 1cell max 4.2v; 45.2 - Pb auto max 14.8v
+#define DEEP_SLEEP_MIN_AWAKE_MS 5000 // Minimum time to remain awake after smooth boot
 
 struct configuration_t {
 
@@ -111,11 +110,12 @@ struct configuration_t {
   #ifdef BATTERY_SENSOR
     float battVoltsDivider;
   #endif
-  #if defined(TEMP_SENSOR) || defined(HVAC_CTRL)
+  #if defined(TEMP_SENSOR)
     uint8_t tempUnit;
   #endif
 
   uint8_t ledEnabled;
+  uint16_t deepSleepDurationSec; // 0 - deep sleep disabled, stay awake
 
   char _loaded[7]; // used to check if EEPROM was correctly set
 };

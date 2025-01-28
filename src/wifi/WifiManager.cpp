@@ -463,7 +463,7 @@ void CWifiManager::handleRestAPI_Device(AsyncWebServerRequest *request) {
 
   sensorJson["mqttConfigTopic"] = mqttSubcribeTopicConfig;
 
-#if defined(TEMP_SENSOR_PIN) || defined(HVAC_CTRL)
+#if defined(TEMP_SENSOR_PIN)
   bool sensorReady = sensorProvider->isSensorReady();
   float v;
 
@@ -553,7 +553,7 @@ void CWifiManager::postSensorUpdate() {
   sensorJson["ledEnabled"] = configuration.ledEnabled;
   sensorJson["ledEnabled_label"] = configuration.ledEnabled ? "yes" : "no";
 
-#if defined(TEMP_SENSOR_PIN) || defined(HVAC_CTRL)
+#if defined(TEMP_SENSOR_PIN)
   bool sensorReady = sensorProvider->isSensorReady();
   float v;
 
