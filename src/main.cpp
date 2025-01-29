@@ -29,16 +29,16 @@ void setup() {
   intLEDOn();
 
   #ifndef DISABLE_LOGGING
-  Serial.begin(19200); while (!Serial); delay(100);
+  Serial.begin(115200); while (!Serial); delay(100);
   Log.begin(LOG_LEVEL, &Serial);
   Log.infoln(F("Initializing..."));
+    #ifdef WEB_LOGGING
+    Log.addHandler(&logStream);
+    Log.infoln(F("Initializing web log..."));
+    #endif
   #endif
 
-  #ifdef WEB_LOGGING
-  Log.begin(WEB_LOG_LEVEL, &logStream);
-  Log.infoln(F("Initializing..."));
-  #endif
-
+  
   if (EEPROM_initAndCheckFactoryReset() >= 3) {
     Log.warningln("Factory reset conditions met!");
     EEPROM_wipe();  
