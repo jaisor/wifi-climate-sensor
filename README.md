@@ -3,8 +3,8 @@
 ![main screen](assets/main_screen.png)
 
 Supported features:
-* ESP8266 or ESP32 based
-* Web UI
+* ESP8266 or ESP32 based with an ATH20 I2C sensor
+* Built-in web server with UI for sensor reading and configuration
 * WiFi with both self-hosted or joining existing access points
 * MQTT support for transmitting data
 * OTA firmware update using ElegantOTA at `/update`
@@ -31,13 +31,21 @@ This can be forced by power-cycling the device several times. Powered up duratio
 Compile and upload the project using USB. After the resistors are removed (see below), future updates will have to be made using OTA. 
 Access to OTA is at `/update` path at the device's IP. See Initial boot below on how to connect to the self-hosted AP.
 
-# Assembly
+# Schematic, PCB and assembly
 
-## Parts
+[Schematic and PCB available online](https://a360.co/4gnvt9p)
 
-## Wiring
+[Gerber files uploaded here](https://365.altium.com/files/86EDE8C7-B795-499B-9DB7-9364AABE9626)
 
-## Case
+[Gedber files direct download](assets/gerber.zip)
+
+[Schematic EAGLE sch file](assets/schematic_eagle.sch)
+
+![Schematic](assets/schematic.png)
+![PCB](assets/pcb.png)
+
+
+# Case
 
 # Apache proxy setup
 
