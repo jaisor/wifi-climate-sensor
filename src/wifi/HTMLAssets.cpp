@@ -8,7 +8,7 @@ const char htmlTop[] PROGMEM = R"=====(
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark" />
     <link rel="stylesheet" href="style.css" />
-    <title>%s</title>
+    <title>%s - WiFi Climate Sensor</title>
     <script>
       document.addEventListener("DOMContentLoaded", function() {
         document.querySelector("form").addEventListener("submit", function (event) {
@@ -40,13 +40,13 @@ const char htmlTop[] PROGMEM = R"=====(
   </head>
   <body>
     <header class="container">
-      <span>🛜 %s <b>%i%%</b></span>
-      <span>🌡️ Room <b>%0.2f°%s</b></span>
       <nav>
         <ul><li>
           <hgroup>
-            <h2><a href=".">%s</a></h2>
-            <p>WiFi Climate Sensor!</p>
+            <h2><a href=".">🏠%s</a> - WiFi Climate Sensor!</h2>
+            <span>🛜 %s <b>%i%%</b> . </span>
+            <span>MQTT %s . </span>
+            <span>⌛<b>%02d:%02d:%02d</b></span>
           </hgroup>
         </li></ul>
         <ul><li>
@@ -66,8 +66,6 @@ const char htmlTop[] PROGMEM = R"=====(
 const char htmlBottom[] PROGMEM = R"=====(
     </main>
     <footer class="container">
-      <span>⌛<b>%02d:%02d:%02d</b></span>
-      <span>MQTT %s</span>
       <small hidden="true">%s</small>
     </footer>
   </body>
@@ -125,47 +123,25 @@ const char htmlDevice[] PROGMEM = R"=====(
       </form>
 )=====";
 
-const char htmlHeatPump[] PROGMEM = R"=====(
-      <h3>Heat Pump / AC Settings %s%s</h3>
-      <form method='POST' action='hp' enctype='application/x-www-form-urlencoded' delay='2000'>
-        <fieldset>
-          <label>
-            Power
-            <select name='power' id='power'>
-            %s
-            </select>
-          </label>
-          <label>
-            Mode
-            <select name='mode' id='mode'>
-            %s
-            </select>
-          </label>
-          <label>
-            Desired temperature <output id="tempOutputId">%i</output>° %s
-            <input type="range" id="temperature" name="temperature" value="%i" min="%i" max="%i" step="1" oninput="tempOutputId.value = temperature.value">
-          </label>
-          <label>
-            Fan
-            <select name='fan' id='fan'>
-            %s
-            </select>
-          </label>
-          <label>
-            Vertical vane
-            <select name='vane' id='vane'>
-            %s
-            </select>
-          </label> 
-          <label>
-            Horizontal vane
-            <select name='wideVane' id='wideVane'>
-            %s
-            </select><br>
-          </label> 
-        </fieldset>
-        <button type='submit' value='Submit'>Submit...</button>
-      </form>
+const char htmlMain[] PROGMEM = R"=====(
+      <article>
+        <header class="grid">
+          <h1>🌡️ Temperature</h1>
+          <h1 style="text-align: right;">%0.2f° %s</h1>
+        </header>
+        <p>
+          Graph goes here
+        </p>
+      </article>
+      <article>
+        <header class="grid">
+          <h1>💧 Humidity</h1>
+          <h1 style="text-align: right;">%0.2f %%</h1>
+        </header>
+        <p>
+          Graph goes here
+        </p>
+      </article>
 )=====";
 
 const char cssPico[] PROGMEM = R"=====(

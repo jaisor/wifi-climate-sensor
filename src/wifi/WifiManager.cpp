@@ -249,7 +249,7 @@ void CWifiManager::handleRoot(AsyncWebServerRequest *request) {
 
   AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
   printHTMLTop(response);
-  printHTMLHeatPump(response);
+  printHTMLMain(response);
   printHTMLBottom(response);
   request->send(response);
 
@@ -652,17 +652,6 @@ void CWifiManager::mqttCallback(char *topic, uint8_t *payload, unsigned int leng
 }
 
 void CWifiManager::printHTMLTop(Print *p) {
-  float t = sensorProvider->getTemperature(NULL);
-  p->printf_P(htmlTop, 
-    configuration.name, 
-    isApMode() ? softAP_SSID : SSID, dBmtoPercentage(WiFi.RSSI()),
-    configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F",
-    configuration.name
-    
-  );
-}
-
-void CWifiManager::printHTMLBottom(Print *p) {
   int sec = millis() / 1000;
   int min = sec / 60;
   int hr = min / 60;
@@ -671,126 +660,34 @@ void CWifiManager::printHTMLBottom(Print *p) {
   if (mqtt.state() == MQTT_CONNECTED) {
     snprintf_P(mqttStat, 255, PSTR("✅"));
   } else {
-    snprintf_P(mqttStat, 255, PSTR("<a href='mqtt_reconnect'>❌[%i]</a>"), mqtt.state());
+    snprintf_P(mqttStat, 255, PSTR("<a href='mqtt_reconnect'>❌<sup>%i</sup></a>"), mqtt.state());
   }
 
+  p->printf_P(htmlTop, 
+    configuration.name, configuration.name, 
+    isApMode() ? softAP_SSID : SSID, dBmtoPercentage(WiFi.RSSI()),
+    mqttStat, hr, min % 60, sec % 60
+  );
+}
+
+void CWifiManager::printHTMLBottom(Print *p) {
   JsonDocument ac = sensorProvider->getDeviceSettings();
   String jsonStr;
   serializeJson(ac, jsonStr);
   Log.verboseln("hpSettings: '%s'", jsonStr.c_str());
 
-  p->printf_P(htmlBottom, hr, min % 60, sec % 60, mqttStat, jsonStr.c_str());
+  p->printf_P(htmlBottom, jsonStr.c_str());
 }
 
-void CWifiManager::printHTMLHeatPump(Print *p) {
+void CWifiManager::printHTMLMain(Print *p) {
 
-  JsonDocument ac = sensorProvider->getDeviceSettings();
-  float t = ac.containsKey("temperature") ? ac["temperature"] : 0;
-
-  char selectPower[512] = "";
-  if (ac.containsKey("power")) {
-    snprintf_P(selectPower, 512, PSTR("\
-      <option %s value='OFF'>OFF</option>\
-      <option %s value='ON'>ON</option>"
-      ), 
-      strcmp(ac["power"], "OFF") == 0 ? "selected" : "", 
-      strcmp(ac["power"], "ON") == 0 ? "selected" : ""
-    );
-  }
-
-  char selectMode[512] = "";
-  if (ac.containsKey("mode")) {
-    snprintf_P(selectMode, 512, PSTR("\
-      <option %s value='HEAT'>HEAT</option>\
-      <option %s value='DRY'>DRY</option>\
-      <option %s value='COOL'>COOL</option>\
-      <option %s value='FAN'>FAN</option>\
-      <option %s value='AUTO'>AUTO</option>\
-      "), 
-      strcmp(ac["mode"], "HEAT") == 0 ? "selected" : "", 
-      strcmp(ac["mode"], "DRY") == 0 ? "selected" : "",
-      strcmp(ac["mode"], "COOL") == 0 ? "selected" : "",
-      strcmp(ac["mode"], "FAN") == 0 ? "selected" : "",
-      strcmp(ac["mode"], "AUTO") == 0 ? "selected" : ""
-    );
-  }
-
-  char selectFan[512] = "";
-  if (ac.containsKey("fan")) {
-    snprintf_P(selectFan, 512, PSTR("\
-      <option %s value='AUTO'>AUTO</option>\
-      <option %s value='QUIET'>QUIET</option>\
-      <option %s value='1'>1</option>\
-      <option %s value='2'>2</option>\
-      <option %s value='3'>3</option>\
-      <option %s value='4'>4</option>\
-      "), 
-      strcmp(ac["fan"], "AUTO") == 0 ? "selected" : "", 
-      strcmp(ac["fan"], "QUIET") == 0 ? "selected" : "",
-      strcmp(ac["fan"], "1") == 0 ? "selected" : "",
-      strcmp(ac["fan"], "2") == 0 ? "selected" : "",
-      strcmp(ac["fan"], "3") == 0 ? "selected" : "",
-      strcmp(ac["fan"], "4") == 0 ? "selected" : ""
-    );
-  }
-
-  uint8_t tu = (uint8_t)lroundf(configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32);
-  uint8_t tminu = configuration.tempUnit == TEMP_UNIT_CELSIUS ? 16 : 60;
-  uint8_t tmaxu = configuration.tempUnit == TEMP_UNIT_CELSIUS ? 31 : 88;
-
-  char selectVane[512] = "";
-  if (ac.containsKey("vane")) {
-    snprintf_P(selectVane, 512, PSTR("\
-      <option %s value='AUTO'>AUTO</option>\
-      <option %s value='1'>1</option>\
-      <option %s value='2'>2</option>\
-      <option %s value='3'>3</option>\
-      <option %s value='4'>4</option>\
-      <option %s value='5'>5</option>\
-      <option %s value='SWING'>SWING</option>\
-      "), 
-      strcmp(ac["vane"], "AUTO") == 0 ? "selected" : "", 
-      strcmp(ac["vane"], "1") == 0 ? "selected" : "",
-      strcmp(ac["vane"], "2") == 0 ? "selected" : "",
-      strcmp(ac["vane"], "3") == 0 ? "selected" : "",
-      strcmp(ac["vane"], "4") == 0 ? "selected" : "",
-      strcmp(ac["vane"], "5") == 0 ? "selected" : "",
-      strcmp(ac["vane"], "SWING") == 0 ? "selected" : ""
-    );
-  }
-
-  char selectWideVane[512] = "";
-  if (ac.containsKey("vane")) {
-    snprintf_P(selectWideVane, 512, PSTR("\
-      <option %s value='&lt;&lt;'>&lt;&lt;</option>\
-      <option %s value='&lt;'>&lt;</option>\
-      <option %s value='|'>|</option>\
-      <option %s value='&gt;'>&gt;</option>\
-      <option %s value='&gt;&gt;'>&gt;&gt;</option>\
-      <option %s value='&lt;&gt;'>&lt;&gt;</option>\
-      <option %s value='SWING'>SWING</option>\
-      "), 
-      strcmp(ac["wideVane"], "<<") == 0 ? "selected" : "",
-      strcmp(ac["wideVane"], "<") == 0 ? "selected" : "",
-      strcmp(ac["wideVane"], "|") == 0 ? "selected" : "",
-      strcmp(ac["wideVane"], ">") == 0 ? "selected" : "",
-      strcmp(ac["wideVane"], ">>") == 0 ? "selected" : "",
-      strcmp(ac["wideVane"], "<>") == 0 ? "selected" : "",
-      strcmp(ac["wideVane"], "SWING") == 0 ? "selected" : ""
-    );
-  }
-
-  p->printf_P(htmlHeatPump, 
-    ac.containsKey("connected") && ac["connected"] ? PSTR("✅") : PSTR("❌"),
-    ac.containsKey("operating") && ac["operating"] ? "⚡" : "",
-    selectPower,
-    selectMode,
-    //
-    tu, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", tu, tminu, tmaxu,
-    //
-    selectFan, // fan
-    selectVane, // vane
-    selectWideVane // wideVane
+  float t = sensorProvider->getTemperature(NULL);
+  // 
+  //JsonDocument ac = sensorProvider->getDeviceSettings();
+  
+  p->printf_P(htmlMain, 
+    configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F",
+    0
   );
 }
 
