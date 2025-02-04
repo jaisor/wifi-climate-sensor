@@ -16,6 +16,9 @@
   #include <DHT.h>
   #include <DHT_U.h>
 #endif
+#ifdef TEMP_SENSOR_AHT
+  #include <Adafruit_AHTX0.h>
+#endif
 
 #define STALE_READING_AGE_MS 10000 // 10 sec
 
@@ -28,8 +31,10 @@ public:
 
   virtual bool isSensorReady() { return sensorReady; };
 
+#if defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
   virtual float getTemperature(bool *current);
-#if defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280)
+#endif
+#if defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
   virtual float getHumidity(bool *current);
 #endif
 #if defined(TEMP_SENSOR_BME280)
@@ -63,6 +68,11 @@ private:
 #ifdef TEMP_SENSOR_DHT
   float _humidity;
   DHT_Unified *_dht;
+  unsigned long minDelayMs;
+#endif
+#ifdef TEMP_SENSOR_AHT
+  float _humidity;
+  Adafruit_AHTX0 *_aht;
   unsigned long minDelayMs;
 #endif
 

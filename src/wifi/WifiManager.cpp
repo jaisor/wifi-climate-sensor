@@ -682,12 +682,14 @@ void CWifiManager::printHTMLBottom(Print *p) {
 void CWifiManager::printHTMLMain(Print *p) {
 
   float t = sensorProvider->getTemperature(NULL);
+  float h = sensorProvider->getHumidity(NULL);
+    
   // 
   //JsonDocument ac = sensorProvider->getDeviceSettings();
   
   p->printf_P(htmlMain, 
     configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F",
-    0
+    h
   );
 }
 

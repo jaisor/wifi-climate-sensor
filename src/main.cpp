@@ -38,7 +38,6 @@ void setup() {
     #endif
   #endif
 
-  
   if (EEPROM_initAndCheckFactoryReset() >= 3) {
     Log.warningln("Factory reset conditions met!");
     EEPROM_wipe();  
