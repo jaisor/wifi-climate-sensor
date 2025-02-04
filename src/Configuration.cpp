@@ -64,6 +64,8 @@ void EEPROM_loadConfig() {
     #endif
     #ifdef TEMP_SENSOR
       configuration.tempUnit = TEMP_UNIT_FAHRENHEIT;
+      configuration.tempCorrectionFunc[0] = 0;
+      configuration.tempCorrectionFunc[1] = 0;
     #endif
 
     EEPROM_saveConfig();

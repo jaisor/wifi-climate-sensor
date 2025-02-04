@@ -112,6 +112,7 @@ struct configuration_t {
   #endif
   #if defined(TEMP_SENSOR)
     uint8_t tempUnit;
+    float tempCorrectionFunc[2]; // y = ax + b; a=tempCorrectionFunc[0]; b=tempCorrectionFunc[1]
   #endif
 
   uint8_t ledEnabled;

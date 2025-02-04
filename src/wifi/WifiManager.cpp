@@ -92,8 +92,8 @@ void CWifiManager::listen() {
   server->on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(404); });
   //
   server->on("/wifi", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleWifi, this, std::placeholders::_1));
+  server->on("/sensor", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleSensor, this, std::placeholders::_1));
   server->on("/device", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleDevice, this, std::placeholders::_1));
-  server->on("/hp", HTTP_POST, std::bind(&CWifiManager::handleHeatPump, this, std::placeholders::_1));
   //
   server->on("/factory_reset", HTTP_POST, std::bind(&CWifiManager::handleFactoryReset, this, std::placeholders::_1));
   server->on("/reboot", HTTP_POST, std::bind(&CWifiManager::handleReboot, this, std::placeholders::_1));
@@ -108,8 +108,8 @@ void CWifiManager::listen() {
     intLEDOff();
   });
 #endif
-  server->on("/api/hp", HTTP_GET, std::bind(&CWifiManager::handleRestAPI_HP, this, std::placeholders::_1));
-  AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler("/api/hp", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+  server->on("/api", HTTP_GET, std::bind(&CWifiManager::handleRestAPI_HP, this, std::placeholders::_1));
+  AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler("/api", [this](AsyncWebServerRequest *request, JsonVariant &json) {
     bool success = this->saveHP(json.as<JsonObject>());
     if (success) {
       handleRestAPI_HP(request);
@@ -294,6 +294,41 @@ void CWifiManager::handleWifi(AsyncWebServerRequest *request) {
   intLEDOff();
 }
 
+void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
+  Log.traceln("handleSensor: %s", request->methodToString());
+  intLEDOn();
+
+  if (request->method() == HTTP_POST) {
+    
+    uint16_t tempUnit = atoi(request->arg("tempUnit").c_str());
+    configuration.tempUnit = tempUnit;
+    Log.infoln("Temperature unit: %u", tempUnit);
+
+    EEPROM_saveConfig();
+    
+    request->redirect("sensor");
+    tMillis = millis();
+    rebootNeeded = true;
+    
+  } else {
+
+    char tempUnit[256];
+    snprintf(tempUnit, 256, "<option %s value='0'>Celsius</option>\
+      <option %s value='1'>Fahrenheit</option>", 
+      configuration.tempUnit == TEMP_UNIT_CELSIUS ? "selected" : "", 
+      configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "selected" : "");
+
+    AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
+    printHTMLTop(response);
+    response->printf_P(htmlSensor, tempUnit);
+    printHTMLBottom(response);
+    request->send(response);
+
+  }
+
+  intLEDOff();
+}
+
 void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
   Log.traceln("handleDevice: %s", request->methodToString());
   intLEDOn();
@@ -318,67 +353,21 @@ void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
     mqttTopic.toCharArray(configuration.mqttTopic, sizeof(configuration.mqttTopic));
     Log.infoln("MQTT Topic: %s", mqttTopic);
 
-    uint16_t tempUnit = atoi(request->arg("tempUnit").c_str());
-    configuration.tempUnit = tempUnit;
-    Log.infoln("Temperature unit: %u", tempUnit);
-
     EEPROM_saveConfig();
     
-    request->redirect("/");
+    request->redirect("device");
     tMillis = millis();
     rebootNeeded = true;
   } else {
 
-    char tempUnit[256];
-    snprintf(tempUnit, 256, "<option %s value='0'>Celsius</option>\
-      <option %s value='1'>Fahrenheit</option>", 
-      configuration.tempUnit == TEMP_UNIT_CELSIUS ? "selected" : "", 
-      configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "selected" : "");
-
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
     printHTMLTop(response);
     response->printf_P(htmlDevice, configuration.ledEnabled ? "checked" : "",
-      configuration.name, tempUnit,
+      configuration.name,
       configuration.mqttServer, configuration.mqttPort, configuration.mqttTopic);
     printHTMLBottom(response);
     request->send(response);
   }
-  intLEDOff();
-}
-
-void CWifiManager::handleHeatPump(AsyncWebServerRequest *request) {
-  Log.traceln("handleHeatPump: %s", request->methodToString());
-  intLEDOn();
-
-  JsonDocument ac = sensorProvider->getDeviceSettings();
-
-  ac["power"] = request->arg("power");
-  ac["mode"] = request->arg("mode");
-  
-  int tu = atoi(request->arg("temperature").c_str());
-  ac["temperature"] = roundf(configuration.tempUnit == TEMP_UNIT_CELSIUS ? tu : (((float)tu - 32.0) / 1.8));
-  
-  ac["fan"] = request->arg("fan");
-  ac["vane"] = request->arg("vane");
-  ac["wideVane"] = request->arg("wideVane");
-
-  String jsonStr;
-  serializeJson(ac, jsonStr);
-  Log.verboseln("new hpSettings: '%s'", jsonStr.c_str());
-  
-  bool success = sensorProvider->setDeviceSettings(ac);
-  
-  AsyncResponseStream *response = request->beginResponseStream("text/plain; charset=UTF-8");
-  if (success) {
-    response->print("OK");
-    response->setCode(200);
-  } else {
-    response->print("ERROR");
-    response->setCode(500);
-  }
-  
-  request->send(response);
-
   intLEDOff();
 }
 

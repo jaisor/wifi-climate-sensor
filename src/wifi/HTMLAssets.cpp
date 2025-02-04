@@ -54,7 +54,8 @@ const char htmlTop[] PROGMEM = R"=====(
             <summary>⚙️</summary>
             <ul dir="rtl">
               <li><a href="wifi">WiFi 🛜</a></li>
-              <li><a href="device">Device 📱</a></li>
+              <li><a href="sensor">Sensor 🌡️</a></li>
+              <li><a href="device">Device 📟</a></li>
             </ul>
           </details>
       </li></ul>
@@ -88,6 +89,21 @@ const char htmlWifi[] PROGMEM = R"=====(
       </form>
 )=====";
 
+const char htmlSensor[] PROGMEM = R"=====(
+      <h3>Sensor Settings</h3>
+      <form method='POST' action='sensor' enctype='application/x-www-form-urlencoded' delay='10000'>
+        <fieldset>
+          <label>
+            Temperature units
+            <select name='tempUnit' id='tempUnit'>
+              %s
+            </select>
+          </label>
+        </fieldset>
+        <button type='submit' value='Submit'>Submit...</button>
+      </form>
+)=====";
+
 const char htmlDevice[] PROGMEM = R"=====(
       <h3>Device Settings</h3>
       <form method='POST' action='device' enctype='application/x-www-form-urlencoded' delay='8000'>
@@ -101,12 +117,6 @@ const char htmlDevice[] PROGMEM = R"=====(
           <label>
             Device name
             <input type='text' id='deviceName' name='deviceName' value='%s'>
-          </label>
-          <label>
-            Temperature units
-            <select name='tempUnit' id='tempUnit'>
-              %s
-            </select>
           </label>
           <label>MQTT server
             <input type='text' id='mqttServer' name='mqttServer' value='%s'>

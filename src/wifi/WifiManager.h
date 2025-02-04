@@ -46,11 +46,11 @@ private:
 
   void handleRoot(AsyncWebServerRequest *request);
   void handleWifi(AsyncWebServerRequest *request);
+  void handleSensor(AsyncWebServerRequest *request);
   void handleDevice(AsyncWebServerRequest *request);
   void handleFactoryReset(AsyncWebServerRequest *request);
   void handleReboot(AsyncWebServerRequest *request);
   void handleFixMQTT(AsyncWebServerRequest *request);
-  void handleHeatPump(AsyncWebServerRequest *request);
   void handleStyleCSS(AsyncWebServerRequest *request);
   //
   void handleRestAPI_HP(AsyncWebServerRequest *request);
