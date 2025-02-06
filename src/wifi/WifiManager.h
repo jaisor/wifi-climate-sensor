@@ -16,6 +16,11 @@
 #include "BaseManager.h"
 #include "wifi/SensorProvider.h"
 
+#ifdef OLED
+  #include <Adafruit_SSD1306.h>
+  #include <Adafruit_GFX.h>
+#endif
+
 typedef enum {
   WF_CONNECTING = 0,
   WF_LISTENING = 1
@@ -69,9 +74,17 @@ private:
   void mqttCallback(char *topic, uint8_t *payload, unsigned int);
   bool ensureMQTTConnected();
 
+#ifdef OLED
+  Adafruit_SSD1306 *display;
+#endif
+
 public:
 	CWifiManager(ISensorProvider *sensorProvider);
   virtual void loop();
 
   virtual const bool isRebootNeeded() { return rebootNeeded; }
+
+#ifdef OLED
+  void setDisplay(Adafruit_SSD1306* display) { this->display = display; };
+#endif
 };

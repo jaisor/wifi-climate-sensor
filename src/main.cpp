@@ -52,6 +52,7 @@ void setup() {
   
   device = new CDevice();
   wifiManager = new CWifiManager(device);
+  wifiManager->setDisplay(device->display());
 
   if (wifiManager->isError()) {
     Log.errorln("wifiManager->isError()=%i", wifiManager->isError());
@@ -75,8 +76,16 @@ void loop() {
     Log.noticeln("Device booted smoothly!");
   }
 
+  #ifdef OLED
+  device->display()->clearDisplay();
+  #endif
+
   device->loop();
   wifiManager->loop();
+
+  #ifdef OLED
+  device->display()->display();
+  #endif
 
   if (wifiManager->isRebootNeeded()) {
     return;

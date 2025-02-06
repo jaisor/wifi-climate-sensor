@@ -20,6 +20,12 @@
   #include <Adafruit_AHTX0.h>
 #endif
 
+#ifdef OLED
+  #include <Adafruit_SSD1306.h>
+  #include <Adafruit_GFX.h>
+#endif
+
+
 #define STALE_READING_AGE_MS 10000 // 10 sec
 
 class CDevice: public ISensorProvider {
@@ -42,6 +48,10 @@ public:
 #endif
 #ifdef BATTERY_SENSOR
   virtual float getBatteryVoltage(bool *current);
+#endif
+#ifdef OLED
+  Adafruit_SSD1306* display() const { return _display; };
+  Adafruit_SSD1306 *_display;
 #endif
 
   virtual JsonDocument& getDeviceSettings();

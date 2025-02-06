@@ -14,6 +14,16 @@ CDevice::CDevice() {
   tMillisTemp = millis();
   sensorReady = false;
 
+#ifdef OLED
+  _display = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, -1);
+  if(!_display->begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ID)) {
+      Log.errorln("SSD1306 OLED initialiation failed with ID %x", OLED_I2C_ID);
+      while (1);
+  }
+  _display->clearDisplay();
+  _display->setTextColor(WHITE);
+#endif
+
   tLastReading = 0;
 #ifdef TEMP_SENSOR_DS18B20
   pinMode(TEMP_SENSOR_PIN, INPUT_PULLUP);
@@ -110,6 +120,9 @@ CDevice::~CDevice() {
 #ifdef TEMP_SENSOR_AHT
   delete _aht;
 #endif
+#ifdef OLED
+  delete _display;
+#endif
   Log.noticeln(F("Device destroyed"));
 }
 
@@ -198,6 +211,20 @@ void CDevice::loop() {
 
   #if !defined(ESP8266) || (defined(ESP8266) && defined(DISABLE_LOGGING))
   //.sync();
+  #endif
+
+  #ifdef OLED
+  char st[256];
+  
+  _display->setTextSize(0);
+  _display->setCursor(0,17);
+  _display->setTextSize(1);  
+  float t = getTemperature(NULL);
+  snprintf(st, 256, "Temperature: %0.1f%s\n", configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F");
+  _display->print(st);
+  snprintf(st, 256, "Humidity: %0.1f%%", getHumidity(NULL));
+  _display->print(st);
+
   #endif
 
 }

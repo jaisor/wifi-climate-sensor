@@ -16,8 +16,6 @@
   #define WEB_LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
-#define WIFI    // 2.4Ghz wifi access point
-
 #define EEPROM_FACTORY_RESET 0       // Byte to be used for factory reset device fails to start or is rebooted within 1 sec 3 consequitive times
 #define EEPROM_CONFIGURATION_START 1   // First EEPROM byte to be used for storing the configuration
 
@@ -29,6 +27,7 @@
   #define DEVICE_NAME "ESP8266CLSEN"
 #endif
 
+#define WIFI
 #ifdef WIFI
   #define WIFI_SSID DEVICE_NAME
   #define WIFI_PASS "password123"
@@ -81,6 +80,13 @@
   #elif defined(SEEED_XIAO_M0)
     #define TEMP_SENSOR_PIN D4
   #endif
+#endif
+
+#define OLED
+#ifdef OLED
+  #define OLED_SCREEN_WIDTH 128 // OLED display width, in pixels
+  #define OLED_SCREEN_HEIGHT 32 // OLED display height, in pixel
+  #define OLED_I2C_ID  0x3C
 #endif
 
 #define INTERNAL_LED_PIN LED_BUILTIN

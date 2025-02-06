@@ -21,6 +21,15 @@ const int RSSI_MIN =-100;// define minimum strength of signal in dBm
 
 WiFiClient espClient;
 
+const unsigned char icon_wifi [] PROGMEM = {
+	0x00, 0x00, 0x70, 0x00, 0x7e, 0x00, 0x07, 0x80, 0x01, 0xc0, 0x70, 0xe0, 0x7c, 0x30, 0x0e, 0x38, 
+	0x03, 0x18, 0x61, 0x8c, 0x78, 0xcc, 0x1c, 0xc4, 0x0c, 0x66, 0x46, 0x66, 0x66, 0x66, 0x00, 0x00
+};
+
+const unsigned char icon_ip [] PROGMEM = {
+	0x0, 0xee, 0x49, 0x49, 0x4e, 0x48, 0xe8, 0x0
+};
+
 int dBmtoPercentage(int dBm) {
   int quality;
   if(dBm <= RSSI_MIN) {
@@ -186,6 +195,28 @@ void CWifiManager::loop() {
       return;
     }
 
+    #ifdef OLED
+    display->setTextSize(0);
+    display->drawBitmap(0, 0, icon_wifi, 16, 16, 1);
+    display->drawBitmap(18, 8, icon_ip, 8, 8, 1);
+    display->setCursor(18,0);
+    if (isApMode()) {
+      display->print(WIFI_FALLBACK_SSID);
+      display->print("...");
+      display->setCursor(26,8);
+      display->print(WiFi.softAPIP().toString().c_str());  
+    } else {
+      display->print(configuration.wifiSsid);
+      display->print(" ");
+      display->print(dBmtoPercentage(WiFi.RSSI()));
+      display->print("%");
+      display->setCursor(26,8);
+      display->print(WiFi.localIP().toString());  
+    }
+    
+    display->display();
+    #endif
+
     mqtt.loop();
     
     if (!isApMode() && strlen(configuration.mqttServer) && strlen(configuration.mqttTopic)) {
@@ -309,7 +340,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
     request->redirect("sensor");
     tMillis = millis();
     rebootNeeded = true;
-    
+
   } else {
 
     char tempUnit[256];
