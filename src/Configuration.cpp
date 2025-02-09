@@ -64,8 +64,8 @@ void EEPROM_loadConfig() {
     #endif
     #ifdef TEMP_SENSOR
       configuration.tempUnit = TEMP_UNIT_FAHRENHEIT;
-      configuration.tempCorrectionFunc[0] = 0;
-      configuration.tempCorrectionFunc[1] = 0;
+      memset(configuration.tCorrection, 0, 2 * sizeof(sensorCorrection));
+      memset(configuration.hCorrection, 0, 2 * sizeof(sensorCorrection));
     #endif
 
     EEPROM_saveConfig();
@@ -138,3 +138,19 @@ void intLEDBlink(uint16_t ms) {
   delay(ms);
   if (isIntLEDOn) { intLEDOff(); } else { intLEDOn(); }
 }
+
+#if defined(TEMP_SENSOR)
+  float _correct(sensorCorrection c[], float measured) {
+    float a = (c[1].actual-c[0].actual) / (c[1].measured-c[0].measured);
+    float b = c[1].actual - a * c[0].measured;
+    return a * measured + b;
+  }
+
+  float correctT(float measured) {
+    return _correct(configuration.tCorrection, measured);
+  }
+
+  float correctH(float measured) {
+    return _correct(configuration.hCorrection, measured);
+  }
+#endif

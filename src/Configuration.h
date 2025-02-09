@@ -95,6 +95,13 @@
 #define BATTERY_VOLTS_DIVIDER 162.3 // 162.3 - LiPo 1cell max 4.2v; 45.2 - Pb auto max 14.8v
 #define DEEP_SLEEP_MIN_AWAKE_MS 5000 // Minimum time to remain awake after smooth boot
 
+#if defined(TEMP_SENSOR)
+  struct sensorCorrection {
+    float measured;
+    float actual;
+  };
+#endif
+
 struct configuration_t {
 
   #ifdef WIFI
@@ -118,7 +125,8 @@ struct configuration_t {
   #endif
   #if defined(TEMP_SENSOR)
     uint8_t tempUnit;
-    float tempCorrectionFunc[2]; // y = ax + b; a=tempCorrectionFunc[0]; b=tempCorrectionFunc[1]
+    sensorCorrection tCorrection[2]; // Temperature
+    sensorCorrection hCorrection[2]; // Humidity
   #endif
 
   uint8_t ledEnabled;
@@ -145,3 +153,8 @@ unsigned long CONFIG_getUpTime();
 void intLEDOn();
 void intLEDOff();
 void intLEDBlink(uint16_t ms);
+
+#if defined(TEMP_SENSOR)
+  float correctT(float measured);
+  float correctH(float measured);
+#endif

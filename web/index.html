@@ -93,6 +93,50 @@
             Device name
             <input type='text' id='deviceName' name='deviceName' value='ESP8266CLSEN'>
           </label>
+          <br/>
+          <label>
+            Temperature correction (provide two values for better accuracy)
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Measured</th>
+                  <th scope="col">Actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><input type='text' id='tMeasured1' name='tMeasured1' value='%0.2f'></th>
+                  <td><input type='text' id='tActual1' name='tActual1' value='%0.2f'></td>
+                </tr>
+                <tr>
+                  <th scope="row"><input type='text' id='tMeasured2' name='tMeasured2' value='%0.2f'></th>
+                  <td><input type='text' id='tActual2' name='tActual2' value='%0.2f'></td>
+                </tr>
+              </tbody>
+            </table>
+          </label>
+          <label>
+            Humibity correction (provide two values for better accuracy)
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Measured</th>
+                  <th scope="col">Actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><input type='text' id='hMeasured1' name='hMeasured1' value='%0.2f'></th>
+                  <td><input type='text' id='hActual1' name='jActual1' value='%0.2f'></td>
+                </tr>
+                <tr>
+                  <th scope="row"><input type='text' id='hMeasured2' name='hMeasured2' value='%0.2f'></th>
+                  <td><input type='text' id='hActual2' name='hActual2' value='%0.2f'></td>
+                </tr>
+              </tbody>
+            </table>
+          </label>
+          <br/>
           <label>
             Temperature units
             <select name='tempUnit' id='tempUnit'>

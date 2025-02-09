@@ -99,6 +99,50 @@ const char htmlSensor[] PROGMEM = R"=====(
               %s
             </select>
           </label>
+          <br/>
+          <label>
+            Temperature correction (two values improve)
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Measured</th>
+                  <th scope="col">Actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><input type='text' id='tMeasured1' name='tMeasured1' value='%0.2f'></th>
+                  <td><input type='text' id='tActual1' name='tActual1' value='%0.2f'></td>
+                </tr>
+                <tr>
+                  <th scope="row"><input type='text' id='tMeasured2' name='tMeasured2' value='%0.2f'></th>
+                  <td><input type='text' id='tActual2' name='tActual2' value='%0.2f'></td>
+                </tr>
+              </tbody>
+            </table>
+          </label>
+          <label>
+            Humibity correction (two values improve)
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Measured</th>
+                  <th scope="col">Actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><input type='text' id='hMeasured1' name='hMeasured1' value='%0.2f'></th>
+                  <td><input type='text' id='hActual1' name='jActual1' value='%0.2f'></td>
+                </tr>
+                <tr>
+                  <th scope="row"><input type='text' id='hMeasured2' name='hMeasured2' value='%0.2f'></th>
+                  <td><input type='text' id='hActual2' name='hActual2' value='%0.2f'></td>
+                </tr>
+              </tbody>
+            </table>
+          </label>
+          <br/>
         </fieldset>
         <button type='submit' value='Submit'>Submit...</button>
       </form>

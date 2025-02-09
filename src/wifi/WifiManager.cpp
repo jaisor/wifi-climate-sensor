@@ -351,7 +351,12 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
 
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
     printHTMLTop(response);
-    response->printf_P(htmlSensor, tempUnit);
+    response->printf_P(htmlSensor, tempUnit,
+      configuration.tCorrection[0].measured, configuration.tCorrection[0].actual,
+      configuration.tCorrection[1].measured, configuration.tCorrection[1].actual,
+      configuration.hCorrection[0].measured, configuration.hCorrection[0].actual,
+      configuration.hCorrection[1].measured, configuration.hCorrection[1].actual
+    );
     printHTMLBottom(response);
     request->send(response);
 
