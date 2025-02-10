@@ -335,6 +335,16 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
     configuration.tempUnit = tempUnit;
     Log.infoln("Temperature unit: %u", tempUnit);
 
+    configuration.tCorrection[0].measured = atoff(request->arg("tMeasured1").c_str());
+    configuration.tCorrection[0].actual = atoff(request->arg("tActual1").c_str());
+    configuration.tCorrection[1].measured = atoff(request->arg("tMeasured2").c_str());
+    configuration.tCorrection[1].actual = atoff(request->arg("tActual2").c_str());
+
+    configuration.hCorrection[0].measured = atoff(request->arg("hMeasured1").c_str());
+    configuration.hCorrection[0].actual = atoff(request->arg("hActual1").c_str());
+    configuration.hCorrection[1].measured = atoff(request->arg("hMeasured2").c_str());
+    configuration.hCorrection[1].actual = atoff(request->arg("hActual2").c_str());
+    
     EEPROM_saveConfig();
     
     request->redirect("sensor");
@@ -708,14 +718,12 @@ void CWifiManager::printHTMLMain(Print *p) {
 
   float t = sensorProvider->getTemperature(NULL);
   float h = sensorProvider->getHumidity(NULL);
-    
-  // 
-  //JsonDocument ac = sensorProvider->getDeviceSettings();
-  
-  p->printf_P(htmlMain, 
-    configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F",
-    h
-  );
+
+  t = configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32;
+  t = correctT(t);
+  h = correctH(h);
+
+  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h);
 }
 
 bool CWifiManager::ensureMQTTConnected() {

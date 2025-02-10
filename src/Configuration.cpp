@@ -141,8 +141,11 @@ void intLEDBlink(uint16_t ms) {
 
 #if defined(TEMP_SENSOR)
   float _correct(sensorCorrection c[], float measured) {
+    if (c[0].measured + c[0].actual + c[1].measured + c[1].actual == 0) {
+      return measured;
+    }
     float a = (c[1].actual-c[0].actual) / (c[1].measured-c[0].measured);
-    float b = c[1].actual - a * c[0].measured;
+    float b = c[0].actual - a * c[0].measured;
     return a * measured + b;
   }
 
