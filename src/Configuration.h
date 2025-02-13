@@ -44,17 +44,17 @@
   #define WEB_SERVER_PORT 80
 #endif
 
-#define BATTERY_SENSOR  // ADC A0 using 0-3.3v voltage divider
-#ifdef BATTERY_SENSOR
-  #define BATTERY_VOLTS_DIVIDER 57.2 // 162.3 - 4.2v max; 57.2 - 14.8v max;
+#define VOLTAGE_SENSOR  // ADC A0 using 0-3.3v voltage divider
+#ifdef VOLTAGE_SENSOR
+  #define VOLTAGE_DIVIDER_VALUE 57.2 // 162.3 - 4.2v max; 57.2 - 14.8v max;
   #if defined(ESP32)
-    #define BATTERY_SENSOR_ADC_PIN  A0
+    #define VOLTAGE_SENSOR_ADC_PIN  A0
   #elif defined(ESP8266)
-    #define BATTERY_SENSOR_ADC_PIN  A0
+    #define VOLTAGE_SENSOR_ADC_PIN  A0
   #elif defined(SEEED_XIAO_M0)
-    #define BATTERY_SENSOR_ADC_PIN  D1
+    #define VOLTAGE_SENSOR_ADC_PIN  D1
   #else
-    #define BATTERY_SENSOR_ADC_PIN  0
+    #define VOLTAGE_SENSOR_ADC_PIN  0
   #endif
 #endif
 
@@ -92,7 +92,6 @@
 #define INTERNAL_LED_PIN LED_BUILTIN
 
 #define DEEP_SLEEP_INTERVAL_SEC 300 // 5 min
-#define BATTERY_VOLTS_DIVIDER 162.3 // 162.3 - LiPo 1cell max 4.2v; 45.2 - Pb auto max 14.8v
 #define DEEP_SLEEP_MIN_AWAKE_MS 5000 // Minimum time to remain awake after smooth boot
 
 #if defined(TEMP_SENSOR)
@@ -120,8 +119,8 @@ struct configuration_t {
   #endif
 
   char name[128];
-  #ifdef BATTERY_SENSOR
-    float battVoltsDivider;
+  #ifdef VOLTAGE_SENSOR
+    float voltageDivider;
   #endif
   #if defined(TEMP_SENSOR)
     uint8_t tempUnit;

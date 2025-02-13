@@ -59,8 +59,8 @@ void EEPROM_loadConfig() {
       strcpy(configuration.mqttTopic, "");
     #endif
 
-    #ifdef BATTERY_SENSOR
-      configuration.battVoltsDivider = BATTERY_VOLTS_DIVIDER;
+    #ifdef VOLTAGE_SENSOR
+      configuration.voltageDivider = VOLTAGE_DIVIDER_VALUE;
     #endif
     #ifdef TEMP_SENSOR
       configuration.tempUnit = TEMP_UNIT_FAHRENHEIT;

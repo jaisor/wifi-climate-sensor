@@ -39,13 +39,14 @@
   </head>
   <body>
     <header class="container">
+      <span>🛜 jaisor-n <b>100%</b> ▪ </span>
+      <span>MQTT <a href="mqtt_reconnect" alt="[-1]">❌</a> ▪ </span>
+      <span>⌛<b>03:14:53</b></span>
       <nav>
         <ul><li>
           <hgroup>
-            <h2><a href=".">🏠ESP8266CLSEN</a> - WiFi Climate Sensor!</h2>
-            <span>🛜 jaisor-n <b>100%</b> . </span>
-            <span>MQTT <a href="mqtt_reconnect" alt="[-1]">❌</a> . </span>
-            <span>⌛<b>03:14:53</b></span>
+            <h2><a href=".">ESP8266CLSEN</a></h2>
+            <p>WiFi Climate Sensor</p>
           </hgroup>
         </li></ul>
         <ul><li>
@@ -94,8 +95,10 @@
             <input type='text' id='deviceName' name='deviceName' value='ESP8266CLSEN'>
           </label>
           <br/>
+          Sensor correction<br/>
+          <sup><small>optional second value improves accuracy</small></sup>
           <label>
-            Temperature correction (provide two values for better accuracy)
+            Temperature <kbd>25.71F</kbd>
             <table>
               <thead>
                 <tr>
@@ -105,18 +108,18 @@
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row"><input type='text' id='tMeasured1' name='tMeasured1' value='%0.2f'></th>
-                  <td><input type='text' id='tActual1' name='tActual1' value='%0.2f'></td>
+                  <th scope="row"><input type='text' id='tMeasured1' name='tMeasured1' value='79.68'></th>
+                  <td><input type='text' id='tActual1' name='tActual1' value='73.00'></td>
                 </tr>
                 <tr>
-                  <th scope="row"><input type='text' id='tMeasured2' name='tMeasured2' value='%0.2f'></th>
-                  <td><input type='text' id='tActual2' name='tActual2' value='%0.2f'></td>
+                  <th scope="row"><input type='text' id='tMeasured2' name='tMeasured2' value='0.00'></th>
+                  <td><input type='text' id='tActual2' name='tActual2' value='0.00'></td>
                 </tr>
               </tbody>
             </table>
           </label>
           <label>
-            Humibity correction (provide two values for better accuracy)
+            Humidity (currently 38.54)
             <table>
               <thead>
                 <tr>
@@ -126,15 +129,20 @@
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row"><input type='text' id='hMeasured1' name='hMeasured1' value='%0.2f'></th>
-                  <td><input type='text' id='hActual1' name='jActual1' value='%0.2f'></td>
+                  <th scope="row"><input type='text' id='hMeasured1' name='hMeasured1' value='0.00'></th>
+                  <td><input type='text' id='hActual1' name='jActual1' value='0.00'></td>
                 </tr>
                 <tr>
-                  <th scope="row"><input type='text' id='hMeasured2' name='hMeasured2' value='%0.2f'></th>
-                  <td><input type='text' id='hActual2' name='hActual2' value='%0.2f'></td>
+                  <th scope="row"><input type='text' id='hMeasured2' name='hMeasured2' value='0.00'></th>
+                  <td><input type='text' id='hActual2' name='hActual2' value='0.00'></td>
                 </tr>
               </tbody>
             </table>
+          </label>
+          <br/>
+          <label>
+            Voltage sensor divider (currently 1.7v / 279 raw ADC value)
+            <input type='text' id='voltageDivider' name='voltageDivider' value='162.3'>
           </label>
           <br/>
           <label>

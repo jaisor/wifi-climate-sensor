@@ -40,13 +40,14 @@ const char htmlTop[] PROGMEM = R"=====(
   </head>
   <body>
     <header class="container">
+      <span>🛜 %s <b>%i%%</b> ▪ </span>
+      <span>MQTT %s ▪ </span>
+      <span>⌛<b>%02d:%02d:%02d</b></span>
       <nav>
         <ul><li>
           <hgroup>
-            <h2><a href=".">🏠%s</a> - WiFi Climate Sensor!</h2>
-            <span>🛜 %s <b>%i%%</b> . </span>
-            <span>MQTT %s . </span>
-            <span>⌛<b>%02d:%02d:%02d</b></span>
+            <h2><a href=".">🏠%s</a></h2>
+            <p>WiFi Climate Sensor</p>
           </hgroup>
         </li></ul>
         <ul><li>
@@ -100,8 +101,11 @@ const char htmlSensor[] PROGMEM = R"=====(
             </select>
           </label>
           <br/>
+          Sensor correction<br/>
+          <sup><small>optional second value improves accuracy</small></sup>
+          <br/>
           <label>
-            Temperature correction (two values improve)
+            Temperature <kbd>%0.2f°%s</kbd>
             <table>
               <thead>
                 <tr>
@@ -122,7 +126,7 @@ const char htmlSensor[] PROGMEM = R"=====(
             </table>
           </label>
           <label>
-            Humibity correction (two values improve)
+            Humidity <kbd>%0.2f%%</kbd>
             <table>
               <thead>
                 <tr>
@@ -143,6 +147,11 @@ const char htmlSensor[] PROGMEM = R"=====(
             </table>
           </label>
           <br/>
+          <label>
+            Voltage sensor divider <kbd>%0.1fV</kbd> / <kbd>%i ADC</kbd>
+            <input type='text' id='voltageDivider' name='voltageDivider' value='%0.1f'>
+          </label>
+          </br>
         </fieldset>
         <button type='submit' value='Submit'>Submit...</button>
       </form>
@@ -181,7 +190,7 @@ const char htmlMain[] PROGMEM = R"=====(
       <article>
         <header class="grid">
           <h1>🌡️ Temperature</h1>
-          <h1 style="text-align: right;">%0.2f° %s</h1>
+          <h1 style="text-align: right;"><kbd>%0.2f° %s</kbd></h1>
         </header>
         <p>
           Graph goes here
@@ -190,7 +199,7 @@ const char htmlMain[] PROGMEM = R"=====(
       <article>
         <header class="grid">
           <h1>💧 Humidity</h1>
-          <h1 style="text-align: right;">%0.2f %%</h1>
+          <h1 style="text-align: right;"><kbd>%0.2f %%</kbd></h1>
         </header>
         <p>
           Graph goes here

@@ -46,8 +46,8 @@ CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
 :sensorProvider(sensorProvider), rebootNeeded(false), wifiRetries(0) {  
 
   sensorJson["dev_name"] = configuration.name;
-  #ifdef BATTERY_SENSOR
-  sensorJson["battVoltsDivider"] = configuration.battVoltsDivider;
+  #ifdef VOLTAGE_SENSOR
+  sensorJson["voltageDivider"] = configuration.voltageDivider;
   #endif
 
   strcpy(SSID, configuration.wifiSsid);
@@ -344,6 +344,8 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
     configuration.hCorrection[0].actual = atoff(request->arg("hActual1").c_str());
     configuration.hCorrection[1].measured = atoff(request->arg("hMeasured2").c_str());
     configuration.hCorrection[1].actual = atoff(request->arg("hActual2").c_str());
+
+    configuration.voltageDivider = atoff(request->arg("voltageDivider").c_str());
     
     EEPROM_saveConfig();
     
@@ -358,14 +360,23 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
       <option %s value='1'>Fahrenheit</option>", 
       configuration.tempUnit == TEMP_UNIT_CELSIUS ? "selected" : "", 
       configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "selected" : "");
+    
+    float t = sensorProvider->getTemperature(NULL);
+    if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
+      t = t * 1.8 + 32;
+    }
 
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
     printHTMLTop(response);
     response->printf_P(htmlSensor, tempUnit,
+      t, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "F" : "" )),
       configuration.tCorrection[0].measured, configuration.tCorrection[0].actual,
       configuration.tCorrection[1].measured, configuration.tCorrection[1].actual,
+      sensorProvider->getHumidity(NULL),
       configuration.hCorrection[0].measured, configuration.hCorrection[0].actual,
-      configuration.hCorrection[1].measured, configuration.hCorrection[1].actual
+      configuration.hCorrection[1].measured, configuration.hCorrection[1].actual,
+      sensorProvider->getVoltage(NULL), analogRead(VOLTAGE_SENSOR_ADC_PIN),
+      configuration.voltageDivider
     );
     printHTMLBottom(response);
     request->send(response);
@@ -613,10 +624,10 @@ void CWifiManager::postSensorUpdate() {
     }
   }
 #endif
-#ifdef BATTERY_SENSOR
-  if (configuration.battVoltsDivider > 0) {
-    sensorJson["battery_v"] = sensorProvider->getBatteryVoltage(NULL);
-    iv = analogRead(BATTERY_SENSOR_ADC_PIN);
+#ifdef VOLTAGE_SENSOR
+  if (configuration.voltageDivider > 0) {
+    sensorJson["voltage_v"] = sensorProvider->getVoltage(NULL);
+    iv = analogRead(VOLTAGE_SENSOR_ADC_PIN);
     sensorJson["adc_raw"] = iv;
   }
 #endif
@@ -699,9 +710,10 @@ void CWifiManager::printHTMLTop(Print *p) {
   }
 
   p->printf_P(htmlTop, 
-    configuration.name, configuration.name, 
+    configuration.name, 
     isApMode() ? softAP_SSID : SSID, dBmtoPercentage(WiFi.RSSI()),
-    mqttStat, hr, min % 60, sec % 60
+    mqttStat, hr, min % 60, sec % 60,
+    configuration.name
   );
 }
 

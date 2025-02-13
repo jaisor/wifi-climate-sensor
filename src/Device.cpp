@@ -86,11 +86,11 @@ CDevice::CDevice() {
   minDelayMs = 100;
 #endif
 
-#ifdef BATTERY_SENSOR
+#ifdef VOLTAGE_SENSOR
   #if SEEED_XIAO_M0
     analogReadResolution(12);
   #endif
-  pinMode(BATTERY_SENSOR_ADC_PIN, INPUT);
+  pinMode(VOLTAGE_SENSOR_ADC_PIN, INPUT);
 #endif
 
 
@@ -260,12 +260,12 @@ float CDevice::getBaroPressure(bool *current) {
 }
 #endif
 
-#ifdef BATTERY_SENSOR
-float CDevice::getBatteryVoltage(bool *current) {  
+#ifdef VOLTAGE_SENSOR
+float CDevice::getVoltage(bool *current) {  
   if (current != NULL) { *current = true; } 
-  int vi = analogRead(BATTERY_SENSOR_ADC_PIN);
-  float v = (float)vi/configuration.battVoltsDivider;
-  Log.verboseln(F("Battery voltage raw: %i volts: %D"), vi, v);
+  int vi = analogRead(VOLTAGE_SENSOR_ADC_PIN);
+  float v = (float)vi/configuration.voltageDivider;
+  Log.verboseln(F("Voltage raw: %i volts: %D"), vi, v);
   return v; 
 }
 #endif

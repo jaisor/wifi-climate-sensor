@@ -46,8 +46,8 @@ public:
 #if defined(TEMP_SENSOR_BME280)
   virtual float getBaroPressure(bool *current);
 #endif
-#ifdef BATTERY_SENSOR
-  virtual float getBatteryVoltage(bool *current);
+#ifdef VOLTAGE_SENSOR
+  virtual float getVoltage(bool *current);
 #endif
 #ifdef OLED
   Adafruit_SSD1306* display() const { return _display; };
