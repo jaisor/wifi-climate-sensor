@@ -32,6 +32,7 @@ private:
   ISensorProvider *sensorProvider;
   
   bool rebootNeeded;
+  bool postedSensorUpdate;
   uint8_t wifiRetries;
   unsigned long tMillis;
   wifi_status status;
@@ -51,7 +52,9 @@ private:
 
   void handleRoot(AsyncWebServerRequest *request);
   void handleWifi(AsyncWebServerRequest *request);
+  #ifdef TEMP_SENSOR
   void handleSensor(AsyncWebServerRequest *request);
+  #endif TEMP_SENSOR
   void handleDevice(AsyncWebServerRequest *request);
   void handleFactoryReset(AsyncWebServerRequest *request);
   void handleReboot(AsyncWebServerRequest *request);
@@ -83,6 +86,7 @@ public:
   virtual void loop();
 
   virtual const bool isRebootNeeded() { return rebootNeeded; }
+  virtual const bool isJobDone() { return !isApMode() && postedSensorUpdate; }
 
 #ifdef OLED
   void setDisplay(Adafruit_SSD1306* display) { this->display = display; };

@@ -43,9 +43,10 @@ int dBmtoPercentage(int dBm) {
 }
 
 CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
-:sensorProvider(sensorProvider), rebootNeeded(false), wifiRetries(0) {  
+:sensorProvider(sensorProvider), postedSensorUpdate(false), rebootNeeded(false), wifiRetries(0) {  
 
   sensorJson["dev_name"] = configuration.name;
+  sensorJson["deepSleepDurationSec"] = configuration.deepSleepDurationSec;
   #ifdef VOLTAGE_SENSOR
   sensorJson["voltageDivider"] = configuration.voltageDivider;
   #endif
@@ -101,7 +102,9 @@ void CWifiManager::listen() {
   server->on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(404); });
   //
   server->on("/wifi", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleWifi, this, std::placeholders::_1));
+#ifdef TEMP_SENSOR
   server->on("/sensor", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleSensor, this, std::placeholders::_1));
+#endif
   server->on("/device", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleDevice, this, std::placeholders::_1));
   //
   server->on("/factory_reset", HTTP_POST, std::bind(&CWifiManager::handleFactoryReset, this, std::placeholders::_1));
@@ -325,6 +328,7 @@ void CWifiManager::handleWifi(AsyncWebServerRequest *request) {
   intLEDOff();
 }
 
+#ifdef TEMP_SENSOR
 void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
   Log.traceln("handleSensor: %s", request->methodToString());
   intLEDOn();
@@ -385,6 +389,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
 
   intLEDOff();
 }
+#endif
 
 void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
   Log.traceln("handleDevice: %s", request->methodToString());
@@ -397,6 +402,10 @@ void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
     deviceName.toCharArray(configuration.name, sizeof(configuration.name));
     Log.infoln("Device req name: %s", deviceName);
     Log.infoln("Device size %i name: %s", sizeof(configuration.name), configuration.name);
+
+    uint16_t deepSleepDurationSec = atoi(request->arg("deepSleepDuration").c_str()) * 60;
+    configuration.deepSleepDurationSec = deepSleepDurationSec;
+    Log.infoln("deepSleepDurationSec : %u", deepSleepDurationSec);
 
     String mqttServer = request->arg("mqttServer");
     mqttServer.toCharArray(configuration.mqttServer, sizeof(configuration.mqttServer));
@@ -417,10 +426,11 @@ void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
     rebootNeeded = true;
   } else {
 
+    uint16_t sleepMin = (uint16_t)(configuration.deepSleepDurationSec / 60);
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
     printHTMLTop(response);
     response->printf_P(htmlDevice, configuration.ledEnabled ? "checked" : "",
-      configuration.name,
+      configuration.name, sleepMin, sleepMin,
       configuration.mqttServer, configuration.mqttPort, configuration.mqttTopic);
     printHTMLBottom(response);
     request->send(response);
@@ -639,7 +649,7 @@ void CWifiManager::postSensorUpdate() {
   sensorJson["rf_msq_queue_size"] = messageQueue->getQueue()->size();
 #endif
 
-  sensorJson["ac"] = sensorProvider->getDeviceSettings();
+  sensorJson["device"] = sensorProvider->getDeviceSettings();
 
   // sensor Json
   sprintf_P(topic, "%s/json", configuration.mqttTopic);
@@ -653,6 +663,7 @@ void CWifiManager::postSensorUpdate() {
   serializeJson(sensorJson, jsonStr);
   Log.noticeln("Sent '%s' json to MQTT topic '%s'", jsonStr.c_str(), topic);
 
+  postedSensorUpdate = true;
   intLEDOff();
 }
 
@@ -728,6 +739,7 @@ void CWifiManager::printHTMLBottom(Print *p) {
 
 void CWifiManager::printHTMLMain(Print *p) {
 
+#ifdef TEMP_SENSOR
   float t = sensorProvider->getTemperature(NULL);
   float h = sensorProvider->getHumidity(NULL);
 
@@ -736,6 +748,9 @@ void CWifiManager::printHTMLMain(Print *p) {
   h = correctH(h);
 
   p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h);
+#else
+  p->printf_P(htmlMain, 0, "", 0);
+#endif
 }
 
 bool CWifiManager::ensureMQTTConnected() {
@@ -762,6 +777,7 @@ bool CWifiManager::ensureMQTTConnected() {
 }
 
 bool CWifiManager::saveHP(JsonObject jsonObj) {
+  /*
   JsonDocument ac = sensorProvider->getDeviceSettings();
 
     if (jsonObj.containsKey("power")) { ac["power"] = jsonObj["power"]; }
@@ -781,6 +797,8 @@ bool CWifiManager::saveHP(JsonObject jsonObj) {
     Log.verboseln("new hpSettings: '%s'", jsonStr.c_str());
     
     return sensorProvider->setDeviceSettings(ac);
+    */
+   return false;
 }
 
 bool CWifiManager::saveDevice(JsonObject jsonObj) {

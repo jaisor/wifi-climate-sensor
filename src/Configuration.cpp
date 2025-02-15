@@ -68,6 +68,8 @@ void EEPROM_loadConfig() {
       memset(configuration.hCorrection, 0, 2 * sizeof(sensorCorrection));
     #endif
 
+    configuration.deepSleepDurationSec = 0;
+
     EEPROM_saveConfig();
   }
 

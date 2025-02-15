@@ -95,6 +95,12 @@
             <input type='text' id='deviceName' name='deviceName' value='ESP8266CLSEN'>
           </label>
           <br/>
+          <label>
+            Sleep interval <kbd><output id="sleepOutputId">5</output> minutes</kbd>
+            <input type="range" id="deepSleepDuration" name="deepSleepDuration" value="5" min="0" max="60" step="1" oninput="sleepOutputId.value = deepSleepDuration.value"><br/>
+            <sub><small><i>0 minutes</i> disables sleep, allowing web access any time</small></sub>
+          </label>
+          <br/>
           Sensor correction<br/>
           <sup><small>optional second value improves accuracy</small></sup>
           <label>

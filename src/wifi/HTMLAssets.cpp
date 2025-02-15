@@ -171,6 +171,12 @@ const char htmlDevice[] PROGMEM = R"=====(
             Device name
             <input type='text' id='deviceName' name='deviceName' value='%s'>
           </label>
+          <label>
+            Sleep interval <kbd><output id='sleepOutputId'>%i</output> minutes</kbd>
+            <input type='range' id='deepSleepDuration' name='deepSleepDuration' value='%i' min='0' max='60' step='1' oninput='sleepOutputId.value = deepSleepDuration.value'><br/>
+            <sub><small><i>0 minutes</i> disables sleep, allowing web access any time</small></sub>
+          </label>
+          <br/>
           <label>MQTT server
             <input type='text' id='mqttServer' name='mqttServer' value='%s'>
           </label>
@@ -190,7 +196,7 @@ const char htmlMain[] PROGMEM = R"=====(
       <article>
         <header class="grid">
           <h1>🌡️ Temperature</h1>
-          <h1 style="text-align: right;"><kbd>%0.2f° %s</kbd></h1>
+          <h1 style="text-align: right;"><kbd>%0.2f°%s</kbd></h1>
         </header>
         <p>
           Graph goes here
@@ -199,7 +205,7 @@ const char htmlMain[] PROGMEM = R"=====(
       <article>
         <header class="grid">
           <h1>💧 Humidity</h1>
-          <h1 style="text-align: right;"><kbd>%0.2f %%</kbd></h1>
+          <h1 style="text-align: right;"><kbd>%0.2f%%</kbd></h1>
         </header>
         <p>
           Graph goes here

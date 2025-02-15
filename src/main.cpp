@@ -52,7 +52,9 @@ void setup() {
   
   device = new CDevice();
   wifiManager = new CWifiManager(device);
+  #ifdef OLED
   wifiManager->setDisplay(device->display());
+  #endif
 
   if (wifiManager->isError()) {
     Log.errorln("wifiManager->isError()=%i", wifiManager->isError());
@@ -89,6 +91,35 @@ void loop() {
 
   if (wifiManager->isRebootNeeded()) {
     return;
+  }
+
+  // Conditions for deep sleep:
+  // - Min time elapsed since smooth boot (to catch up on any MQTT messages)
+  // - Smooth boot
+  // - Wifi not in AP mode
+  // - Succesfully submitted 1 sensor reading over MQTT
+  if (smoothBoot 
+    && configuration.deepSleepDurationSec > 0 
+    && millis() - tsMillisBooted > DEEP_SLEEP_MIN_AWAKE_MS
+    && wifiManager->isJobDone() ) {
+    delay(100);
+    Log.noticeln("Initiating deep sleep for %u usec", configuration.deepSleepDurationSec );
+    #ifdef ESP32
+      digitalWrite(INTERNAL_LED_PIN, LOW);
+      ESP.deepSleep((uint64_t)configuration.deepSleepDurationSec * 1e6);
+    #elif ESP8266
+      digitalWrite(INTERNAL_LED_PIN, HIGH);
+      ESP.deepSleep((uint64_t)configuration.deepSleepDurationSec * 1e6); 
+    #endif
+  }
+
+  if (configuration.deepSleepDurationSec > 0 && device->getUptime() > configuration.deepSleepDurationSec * 1000) {
+    Log.noticeln("Device is not sleeping right, resetting to save battery");
+    #ifdef ESP32
+      ESP.restart();
+    #elif ESP8266
+      ESP.reset();
+    #endif
   }
  
   yield();

@@ -11,7 +11,7 @@
   #define LOG_LEVEL LOG_LEVEL_VERBOSE
 #endif
 
-#define WEB_LOGGING
+//#define WEB_LOGGING
 #ifdef WEB_LOGGING
   #define WEB_LOG_LEVEL LOG_LEVEL_INFO
 #endif
@@ -82,7 +82,7 @@
   #endif
 #endif
 
-#define OLED
+//#define OLED
 #ifdef OLED
   #define OLED_SCREEN_WIDTH 128 // OLED display width, in pixels
   #define OLED_SCREEN_HEIGHT 32 // OLED display height, in pixel

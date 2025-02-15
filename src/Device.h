@@ -36,11 +36,9 @@ public:
   void loop();
 
   virtual bool isSensorReady() { return sensorReady; };
-
-#if defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
+  
   virtual float getTemperature(bool *current);
-#endif
-#if defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
+#if defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
   virtual float getHumidity(bool *current);
 #endif
 #if defined(TEMP_SENSOR_BME280)
