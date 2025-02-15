@@ -25,13 +25,14 @@ void setup() {
 
   randomSeed(analogRead(0));
   
+  pinMode(D0, WAKEUP_PULLUP);
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   intLEDOn();
 
   #ifndef DISABLE_LOGGING
   Serial.begin(115200); while (!Serial); delay(100);
   Log.begin(LOG_LEVEL, &Serial);
-  Log.infoln(F("Initializing..."));
+  Log.infoln(F("\n\nInitializing..."));
     #ifdef WEB_LOGGING
     Log.addHandler(&logStream);
     Log.infoln(F("Initializing web log..."));
@@ -78,16 +79,16 @@ void loop() {
     Log.noticeln("Device booted smoothly!");
   }
 
-  #ifdef OLED
+#ifdef OLED
   device->display()->clearDisplay();
-  #endif
+#endif
 
   device->loop();
   wifiManager->loop();
 
-  #ifdef OLED
+#ifdef OLED
   device->display()->display();
-  #endif
+#endif
 
   if (wifiManager->isRebootNeeded()) {
     return;

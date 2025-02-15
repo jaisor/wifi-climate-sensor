@@ -82,7 +82,7 @@
   #endif
 #endif
 
-//#define OLED
+#define OLED
 #ifdef OLED
   #define OLED_SCREEN_WIDTH 128 // OLED display width, in pixels
   #define OLED_SCREEN_HEIGHT 32 // OLED display height, in pixel
