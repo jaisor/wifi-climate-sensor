@@ -204,6 +204,7 @@ void CDevice::loop() {
           tLastReading = millis();
         } else {
           Log.warningln(F("Error getting AHT event!"));
+          tLastReading = millis();
         }
       }
     #endif
