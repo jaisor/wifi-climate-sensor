@@ -30,9 +30,8 @@ class CWifiManager: public CBaseManager {
 
 private:
   ISensorProvider *sensorProvider;
-  
-  bool rebootNeeded;
   bool postedSensorUpdate;
+  bool rebootNeeded;
   uint8_t wifiRetries;
   unsigned long tMillis;
   wifi_status status;
@@ -54,7 +53,7 @@ private:
   void handleWifi(AsyncWebServerRequest *request);
   #ifdef TEMP_SENSOR
   void handleSensor(AsyncWebServerRequest *request);
-  #endif TEMP_SENSOR
+  #endif
   void handleDevice(AsyncWebServerRequest *request);
   void handleFactoryReset(AsyncWebServerRequest *request);
   void handleReboot(AsyncWebServerRequest *request);

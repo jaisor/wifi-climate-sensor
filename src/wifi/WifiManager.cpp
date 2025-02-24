@@ -9,6 +9,7 @@
 #include <ElegantOTA.h>
 #include <StreamUtils.h>
 #include <AsyncJson.h>
+#include <Version.h>
 #include "Configuration.h"
 #include "wifi/WifiManager.h"
 #include "wifi/HTMLAssets.h"
@@ -46,6 +47,9 @@ CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
 :sensorProvider(sensorProvider), postedSensorUpdate(false), rebootNeeded(false), wifiRetries(0) {  
 
   sensorJson["dev_name"] = configuration.name;
+  sensorJson["version"] = VERSION;
+  sensorJson["version_short"] = VERSION_SHORT;
+  sensorJson["build_number"] = BUILD_NUMBER;
   sensorJson["deepSleepDurationSec"] = configuration.deepSleepDurationSec;
   #ifdef VOLTAGE_SENSOR
   sensorJson["voltageDivider"] = configuration.voltageDivider;
@@ -291,7 +295,7 @@ void CWifiManager::handleRoot(AsyncWebServerRequest *request) {
 }
 
 void CWifiManager::handleWifi(AsyncWebServerRequest *request) {
-  Log.traceln("handleWifi: %s", request->methodToString());
+  Log.traceln("handleWifi: %i - %s", request->method(), request->methodToString());
   intLEDOn();
 
   if (request->method() == HTTP_POST) {
@@ -682,7 +686,7 @@ void CWifiManager::mqttCallback(char *topic, uint8_t *payload, unsigned int leng
     return;
   }
 
-  Log.noticeln("Received %u bytes message on MQTT topic '%s'", length, topic);
+  Log.verboseln("Received %u bytes message on MQTT topic '%s'", length, topic);
   if (!strcmp(topic, mqttSubcribeTopicConfig)) {
     deserializeJson(configJson, (const byte*)payload, length);
 
@@ -690,12 +694,20 @@ void CWifiManager::mqttCallback(char *topic, uint8_t *payload, unsigned int leng
     serializeJson(configJson, jsonStr);
     Log.noticeln("Received configuration over MQTT with json: '%s'", jsonStr.c_str());
 
-    if (configJson.containsKey("name")) {
-      strncpy(configuration.name, configJson["name"], 128);
+    if (!configJson["name"].isNull()) {
+      Log.traceln("Setting 'name' to %s", configJson["name"].as<const char*>());
+      strncpy(configuration.name, configJson["name"].as<const char*>(), 128);
     }
 
-    if (configJson.containsKey("mqttTopic")) {
-      strncpy(configuration.mqttTopic, configJson["mqttTopic"], 64);
+    if (!configJson["mqttTopic"].isNull()) {
+      Log.traceln("Setting 'mqttTopic' to %s", configJson["mqttTopic"].as<const char*>());
+      strncpy(configuration.mqttTopic, configJson["mqttTopic"].as<const char*>(), 64);
+    }
+
+    if (!configJson["deepSleepDurationSec"].isNull()) {
+      uint16_t deepSleepDurationSec = configJson["deepSleepDurationSec"].as<unsigned int>();
+      configuration.deepSleepDurationSec = deepSleepDurationSec;
+      Log.traceln("Setting 'deepSleepDurationSec' to %u", deepSleepDurationSec);
     }
 
     // Delete the config message in case it was retained
@@ -732,9 +744,8 @@ void CWifiManager::printHTMLBottom(Print *p) {
   JsonDocument ac = sensorProvider->getDeviceSettings();
   String jsonStr;
   serializeJson(ac, jsonStr);
-  Log.verboseln("hpSettings: '%s'", jsonStr.c_str());
-
-  p->printf_P(htmlBottom, jsonStr.c_str());
+  //Log.verboseln("hpSettings: '%s'", jsonStr.c_str());
+  p->printf_P(htmlBottom, VERSION, jsonStr.c_str());
 }
 
 void CWifiManager::printHTMLMain(Print *p) {
@@ -755,8 +766,6 @@ void CWifiManager::printHTMLMain(Print *p) {
 
 bool CWifiManager::ensureMQTTConnected() {
   if (!mqtt.connected() || mqtt.state() != MQTT_CONNECTED) {
-    //Log.noticeln("Disconnecting MQTT...");
-    //mqtt.disconnect();
     if (strlen(configuration.mqttServer) && strlen(configuration.mqttTopic)) { // Reconnectable
       Log.noticeln("Attempting to reconnect from MQTT state %i at '%s:%i' ...", mqtt.state(), configuration.mqttServer, configuration.mqttPort);
       if (mqtt.connect(String(CONFIG_getDeviceId()).c_str())) {

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <version.h>
 #include "Configuration.h"
 
 configuration_t configuration;
@@ -85,6 +86,7 @@ void EEPROM_loadConfig() {
 #endif
 
   Log.noticeln("Device name: %s", configuration.name);
+  Log.noticeln("Version: %s", VERSION);
 }
 
 void EEPROM_wipe() {

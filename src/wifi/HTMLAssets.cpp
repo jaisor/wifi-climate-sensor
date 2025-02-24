@@ -68,6 +68,7 @@ const char htmlTop[] PROGMEM = R"=====(
 const char htmlBottom[] PROGMEM = R"=====(
     </main>
     <footer class="container">
+      <small>Version %s</small>
       <small hidden="true">%s</small>
     </footer>
   </body>
