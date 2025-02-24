@@ -615,25 +615,27 @@ void CWifiManager::postSensorUpdate() {
 
 #if defined(TEMP_SENSOR_PIN)
   bool sensorReady = sensorProvider->isSensorReady();
-  float v;
-
+  
   if (sensorReady) {
-    bool current = false;
-    v = sensorProvider->getTemperature(&current);
-    if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
-      v = v * 1.8 + 32;
-    }
-    char tunit[32];
-    snprintf(tunit, 32, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "Celsius" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "Fahrenheit" : "" )));
-    
+    bool current;
+
+    float t = sensorProvider->getTemperature(&current);
     if (current) {
-      sensorJson["temperature"] = v;
+      if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
+        t = t * 1.8 + 32;
+      }
+      sensorJson["temperature_raw"] = t;
+      sensorJson["temperature"] = correctT(t);
+
+      char tunit[32];
+      snprintf(tunit, 32, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "Celsius" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "Fahrenheit" : "" )));
       sensorJson["temperature_unit"] = tunit;
     }
 
-    v = sensorProvider->getHumidity(&current);
+    float h = sensorProvider->getHumidity(&current);
     if (current) {
-      sensorJson["humidity"] = v;
+      sensorJson["humidity_raw"] = h;
+      sensorJson["humidity"] = correctH(h);
       sensorJson["humidit_unit"] = "percent";
     }
   }

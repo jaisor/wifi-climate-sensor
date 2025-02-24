@@ -138,7 +138,7 @@ const char htmlSensor[] PROGMEM = R"=====(
               <tbody>
                 <tr>
                   <th scope="row"><input type='text' id='hMeasured1' name='hMeasured1' value='%0.2f'></th>
-                  <td><input type='text' id='hActual1' name='jActual1' value='%0.2f'></td>
+                  <td><input type='text' id='hActual1' name='hActual1' value='%0.2f'></td>
                 </tr>
                 <tr>
                   <th scope="row"><input type='text' id='hMeasured2' name='hMeasured2' value='%0.2f'></th>
