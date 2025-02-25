@@ -343,6 +343,10 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
     configuration.tempUnit = tempUnit;
     Log.infoln("Temperature unit: %u", tempUnit);
 
+    tempSensorType tempSensor = (tempSensorType)atoi(request->arg("tempSensor").c_str());
+    configuration.tempSensor = tempSensor;
+    Log.infoln("Temperature sensor type: %u", tempSensor);
+
     configuration.tCorrection[0].measured = atoff(request->arg("tMeasured1").c_str());
     configuration.tCorrection[0].actual = atoff(request->arg("tActual1").c_str());
     configuration.tCorrection[1].measured = atoff(request->arg("tMeasured2").c_str());
@@ -369,6 +373,21 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
       configuration.tempUnit == TEMP_UNIT_CELSIUS ? "selected" : "", 
       configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "selected" : "");
     
+    char tempSensor[512] = "";
+    snprintf_P(tempSensor, 512, PSTR("\
+      <option %s value='0'>-</option>\
+      <option %s value='1'>DS18B20</option>\
+      <option %s value='2'>BME280</option>\
+      <option %s value='3'>DHT22</option>\
+      <option %s value='4'>AHT20</option>\
+      "), 
+      configuration.tempSensor == TEMP_SENSOR_UNSUPPORTED ? "selected" : "", 
+      configuration.tempSensor == TEMP_SENSOR_DS18B20 ? "selected" : "", 
+      configuration.tempSensor == TEMP_SENSOR_BME280 ? "selected" : "", 
+      configuration.tempSensor == TEMP_SENSOR_DHT22 ? "selected" : "", 
+      configuration.tempSensor == TEMP_SENSOR_AHT20 ? "selected" : ""
+    );
+
     float t = sensorProvider->getTemperature(NULL);
     if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
       t = t * 1.8 + 32;
@@ -376,7 +395,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
 
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
     printHTMLTop(response);
-    response->printf_P(htmlSensor, tempUnit,
+    response->printf_P(htmlSensor, tempSensor, tempUnit,
       t, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "F" : "" )),
       configuration.tCorrection[0].measured, configuration.tCorrection[0].actual,
       configuration.tCorrection[1].measured, configuration.tCorrection[1].actual,

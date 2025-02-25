@@ -8,7 +8,7 @@
 //#define DEBUG_MOCK_HP
 //#define DISABLE_LOGGING
 #ifndef DISABLE_LOGGING
-  #define LOG_LEVEL LOG_LEVEL_VERBOSE
+  #define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 //#define WEB_LOGGING
@@ -62,17 +62,8 @@
 #ifdef TEMP_SENSOR
   #define TEMP_UNIT_CELSIUS     0
   #define TEMP_UNIT_FAHRENHEIT  1
-  //#define TEMP_SENSOR_DS18B20
-  //#define TEMP_SENSOR_BME280
-  //#define TEMP_SENSOR_DHT
-  #define TEMP_SENSOR_AHT
-  #ifdef TEMP_SENSOR_DHT
-    #define TEMP_SENSOR_DHT_TYPE   DHT22
-  #endif
-  #ifdef TEMP_SENSOR_BME280
-    #define BME_SEALEVELPRESSURE_HPA (1013.25)
-    #define BME_I2C_ID 0x76
-  #endif
+  #define BME280_SEALEVELPRESSURE_HPA (1013.25)
+  #define BME280_I2C_ID 0x76
   #if defined(ESP32)
     #define TEMP_SENSOR_PIN 0
   #elif defined(ESP8266)
@@ -99,6 +90,14 @@
     float measured;
     float actual;
   };
+
+  typedef enum {
+    TEMP_SENSOR_UNSUPPORTED = 0,
+    TEMP_SENSOR_DS18B20 = 1,
+    TEMP_SENSOR_BME280 = 2,
+    TEMP_SENSOR_DHT22 = 3,
+    TEMP_SENSOR_AHT20 = 4
+  } tempSensorType;
 #endif
 
 struct configuration_t {
@@ -123,6 +122,7 @@ struct configuration_t {
     float voltageDivider;
   #endif
   #if defined(TEMP_SENSOR)
+    tempSensorType tempSensor;
     uint8_t tempUnit;
     sensorCorrection tCorrection[2]; // Temperature
     sensorCorrection hCorrection[2]; // Humidity

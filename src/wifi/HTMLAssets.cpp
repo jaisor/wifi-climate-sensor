@@ -96,6 +96,13 @@ const char htmlSensor[] PROGMEM = R"=====(
       <form method='POST' action='sensor' enctype='application/x-www-form-urlencoded' delay='10000'>
         <fieldset>
           <label>
+            Sensor type
+            <select name='tempSensor' id='tempSensor'>
+              %s
+            </select>
+          </label>
+          <br/>
+          <label>
             Temperature units
             <select name='tempUnit' id='tempUnit'>
               %s

@@ -64,6 +64,7 @@ void EEPROM_loadConfig() {
       configuration.voltageDivider = VOLTAGE_DIVIDER_VALUE;
     #endif
     #ifdef TEMP_SENSOR
+      configuration.tempSensor = TEMP_SENSOR_UNSUPPORTED;
       configuration.tempUnit = TEMP_UNIT_FAHRENHEIT;
       memset(configuration.tCorrection, 0, 2 * sizeof(sensorCorrection));
       memset(configuration.hCorrection, 0, 2 * sizeof(sensorCorrection));

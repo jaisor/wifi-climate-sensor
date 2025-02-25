@@ -8,7 +8,8 @@
 #include <Wire.h>
 #endif
 
-CDevice::CDevice() {
+CDevice::CDevice()
+:oneWire(NULL), ds18b20(NULL), bme280(NULL), dht(NULL), aht(NULL) {
 
   tMillisUp = millis();
   tMillisTemp = millis();
@@ -25,66 +26,82 @@ CDevice::CDevice() {
 #endif
 
   tLastReading = 0;
-#ifdef TEMP_SENSOR_DS18B20
-  pinMode(TEMP_SENSOR_PIN, INPUT_PULLUP);
-  oneWire = new OneWire(TEMP_SENSOR_PIN);
-  DeviceAddress da;
-  ds18b20 = new DS18B20(oneWire);
-  ds18b20->setConfig(DS18B20_CRC);
-  ds18b20->begin();
 
-  ds18b20->getAddress(da);
-  String addr = "";
-  for (uint8_t i = 0; i < 8; i++) {
-    if (da[i] < 16) {
-      addr += String("o");
-    }
-    addr += String(da[i], HEX);
-  }
-  Log.noticeln(F("DS18B20 sensor at address: %s"), addr.c_str());
-  
-  ds18b20->setResolution(12);
-  ds18b20->requestTemperatures();
+  switch (configuration.tempSensor) {
+    case TEMP_SENSOR_DS18B20: {
+      jsonDeviceSettings["sensor_type"] = "DS18B20";
+      pinMode(TEMP_SENSOR_PIN, INPUT_PULLUP);
+      oneWire = new OneWire(TEMP_SENSOR_PIN);
+      DeviceAddress da;
+      ds18b20 = new DS18B20(oneWire);
+      ds18b20->setConfig(DS18B20_CRC);
+      ds18b20->begin();
 
-  sensorReady = true;
-  tMillisTemp = 0;
-#endif
-#ifdef TEMP_SENSOR_BME280
-  _bme = new Adafruit_BME280();
-  if (!_bme->begin(BME_I2C_ID)) {
-    Log.errorln(F("BME280 sensor initialization failed with ID %x"), BME_I2C_ID);
-    sensorReady = false;
-  } else {
-    sensorReady = true;
-    tMillisTemp = 0;
+      ds18b20->getAddress(da);
+      String addr = "";
+      for (uint8_t i = 0; i < 8; i++) {
+        if (da[i] < 16) {
+          addr += String("o");
+        }
+        addr += String(da[i], HEX);
+      }
+      Log.noticeln(F("DS18B20 sensor at address: %s"), addr.c_str());
+      
+      ds18b20->setResolution(12);
+      ds18b20->requestTemperatures();
+
+      sensorReady = true;
+      tMillisTemp = 0;
+    } break;
+    
+    case TEMP_SENSOR_BME280: {
+      jsonDeviceSettings["sensor_type"] = "BME280";
+      bme280 = new Adafruit_BME280();
+      if (!bme280->begin(BME280_I2C_ID)) {
+        Log.errorln(F("BME280 sensor initialization failed with ID %x"), BME280_I2C_ID);
+        sensorReady = false;
+      } else {
+        sensorReady = true;
+        tMillisTemp = 0;
+      }
+    } break;
+
+    case TEMP_SENSOR_DHT22: {
+      jsonDeviceSettings["sensor_type"] = "DHT22";
+      dht = new DHT_Unified(TEMP_SENSOR_PIN, DHT22);
+      dht->begin();
+      sensor_t sensor;
+      dht->temperature().getSensor(&sensor);
+      Log.noticeln(F("DHT temperature sensor name(%s) v(%u) id(%u) range(%F - %F) res(%F)"),
+        sensor.name, sensor.version, sensor.sensor_id, 
+        sensor.min_value, sensor.max_value, sensor.resolution);
+      dht->humidity().getSensor(&sensor);
+      Log.noticeln(F("DHT humidity sensor name(%s) v(%u) id(%u) range(%F - %F) res(%F)"),
+        sensor.name, sensor.version, sensor.sensor_id, 
+        sensor.min_value, sensor.max_value, sensor.resolution);
+      minDelayMs = sensor.min_delay / 1000;
+      Log.noticeln(F("DHT sensor min delay %i"), minDelayMs);
+    } break;
+
+    case TEMP_SENSOR_AHT20: {
+      jsonDeviceSettings["sensor_type"] = "AHT20";
+      aht = new Adafruit_AHTX0();
+      if (!aht->begin()) {
+        Log.errorln("Failed to initialize AHT sensor, check wiring");
+        sensorReady = false;
+      } else {
+        sensorReady = true;
+        tMillisTemp = 0;
+      }
+      minDelayMs = 100;
+    } break;
+
+    default:
+      sensorReady = false;
+      jsonDeviceSettings["sensor_type"] = "unknown";
+      Log.errorln(F("Unsupported temperature sensor"));
+      break;
   }
-#endif
-#ifdef TEMP_SENSOR_DHT
-  _dht = new DHT_Unified(TEMP_SENSOR_PIN, TEMP_SENSOR_DHT_TYPE);
-  _dht->begin();
-  sensor_t sensor;
-  _dht->temperature().getSensor(&sensor);
-  Log.noticeln(F("DHT temperature sensor name(%s) v(%u) id(%u) range(%F - %F) res(%F)"),
-    sensor.name, sensor.version, sensor.sensor_id, 
-    sensor.min_value, sensor.max_value, sensor.resolution);
-  _dht->humidity().getSensor(&sensor);
-  Log.noticeln(F("DHT humidity sensor name(%s) v(%u) id(%u) range(%F - %F) res(%F)"),
-    sensor.name, sensor.version, sensor.sensor_id, 
-    sensor.min_value, sensor.max_value, sensor.resolution);
-  minDelayMs = sensor.min_delay / 1000;
-  Log.noticeln(F("DHT sensor min delay %i"), minDelayMs);
-#endif
-#ifdef TEMP_SENSOR_AHT
-  _aht = new Adafruit_AHTX0();
-  if (!_aht->begin()) {
-    Log.errorln("Failed to initialize AHT sensor, check wiring");
-    sensorReady = false;
-  } else {
-    sensorReady = true;
-    tMillisTemp = 0;
-  }
-  minDelayMs = 100;
-#endif
 
 #ifdef VOLTAGE_SENSOR
   #if SEEED_XIAO_M0
@@ -92,7 +109,6 @@ CDevice::CDevice() {
   #endif
   pinMode(VOLTAGE_SENSOR_ADC_PIN, INPUT);
 #endif
-
 
 #if defined(ESP32)
 #elif defined(ESP8266)
@@ -108,18 +124,10 @@ CDevice::CDevice() {
 }
 
 CDevice::~CDevice() { 
-#ifdef TEMP_SENSOR_DS18B20
   delete ds18b20;
-#endif
-#ifdef TEMP_SENSOR_BME280
-  delete _bme;
-#endif
-#ifdef TEMP_SENSOR_DHT
-  delete _dht;
-#endif
-#ifdef TEMP_SENSOR_AHT
-  delete _aht;
-#endif
+  delete bme280;
+  delete dht;
+  delete aht;
 #ifdef OLED
   delete _display;
 #endif
@@ -129,85 +137,97 @@ CDevice::~CDevice() {
 void CDevice::loop() {
 
   uint32_t delay = 1000;
-  #if defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
+
+  if (configuration.tempSensor == TEMP_SENSOR_DHT22 || 
+    configuration.tempSensor == TEMP_SENSOR_BME280 || 
+    configuration.tempSensor == TEMP_SENSOR_AHT20) {
+
     delay += minDelayMs;
-  #endif
+  }
 
   if (!sensorReady && millis() - tMillisTemp > delay) {
     sensorReady = true;
   }
 
   if (sensorReady && millis() - tMillisTemp > delay) {
-    #ifdef TEMP_SENSOR_DS18B20
-      if (ds18b20->isConversionComplete()) {
-        _temperature = ds18b20->getTempC();
-        ds18b20->setResolution(12);
-        ds18b20->requestTemperatures();
+
+    switch (configuration.tempSensor) {
+      case TEMP_SENSOR_DS18B20: {
+        if (ds18b20->isConversionComplete()) {
+          temperature = ds18b20->getTempC();
+          ds18b20->setResolution(12);
+          ds18b20->requestTemperatures();
+          tLastReading = millis();
+          Log.traceln(F("DS18B20 temp: %FC %FF"), temperature, temperature*1.8+32);
+        }
+      } break;
+      
+      case TEMP_SENSOR_BME280: {
+        temperature = bme280->readTemperature();
+        humidity = bme280->readHumidity();
+        baro_pressure = bme280->readPressure();
         tLastReading = millis();
-        Log.traceln(F("DS18B20 temp: %FC %FF"), _temperature, _temperature*1.8+32);
-      } else {
-        //Log.infoln(F("DS18B20 conversion not complete"));
-      }
-    #endif
-    #ifdef TEMP_SENSOR_BME280
-      _temperature = _bme->readTemperature();
-      _humidity = _bme->readHumidity();
-      _baro_pressure = _bme->readPressure();
-      tLastReading = millis();
-    #endif
-    #ifdef TEMP_SENSOR_DHT
-      if (millis() - tLastReading > delay) {
-        sensors_event_t event;
-        // temperature
-        _dht->temperature().getEvent(&event);
-        if (isnan(event.temperature)) {
-          //Log.warningln(F("Error reading DHT temperature!"));
-        } else {
-          _temperature = event.temperature;
-          Log.traceln(F("DHT temp: %FC %FF"), _temperature, _temperature*1.8+32);
-        }
-        // humidity
-        _dht->humidity().getEvent(&event);
-        if (isnan(event.relative_humidity)) {
-          //Log.warningln(F("Error reading DHT humidity!"));
-        }
-        else {
-          _humidity = event.relative_humidity;
-          Log.traceln(F("DHT humidity: %F%%"), _humidity);
-        }
-        
-        tLastReading = millis();
-      }
-    #endif
-    #ifdef TEMP_SENSOR_AHT
-      if (millis() - tLastReading > delay) {
-        sensors_event_t eh, et;
-        bool goodRead = _aht->getEvent(&eh, &et);
-        if (goodRead) {
+      } break;
+  
+      case TEMP_SENSOR_DHT22: {
+        if (millis() - tLastReading > delay) {
+          sensors_event_t event;
           // temperature
-          if (isnan(et.temperature)) {
-            Log.warningln(F("Error reading AHT temperature!"));
-            goodRead = false;
+          dht->temperature().getEvent(&event);
+          if (isnan(event.temperature)) {
+            //Log.warningln(F("Error reading DHT temperature!"));
           } else {
-            _temperature = et.temperature;
-            //Log.noticeln("AHT temp: %FC %FF", _temperature, _temperature*1.8+32);
+            temperature = event.temperature;
+            Log.traceln(F("DHT temp: %FC %FF"), temperature, temperature*1.8+32);
           }
           // humidity
-          if (isnan(eh.relative_humidity)) {
-            Log.warningln(F("Error reading AHT humidity!"));
-            goodRead = false;
+          dht->humidity().getEvent(&event);
+          if (isnan(event.relative_humidity)) {
+            //Log.warningln(F("Error reading DHT humidity!"));
           }
           else {
-            _humidity = eh.relative_humidity;
-            //Log.noticeln("AHT humidity: %F%%", _humidity);
+            humidity = event.relative_humidity;
+            Log.traceln(F("DHT humidity: %F%%"), humidity);
           }
-          tLastReading = millis();
-        } else {
-          Log.warningln(F("Error getting AHT event!"));
+          
           tLastReading = millis();
         }
-      }
-    #endif
+      } break;
+  
+      case TEMP_SENSOR_AHT20: {
+        if (millis() - tLastReading > delay) {
+          sensors_event_t eh, et;
+          bool goodRead = aht->getEvent(&eh, &et);
+          if (goodRead) {
+            // temperature
+            if (isnan(et.temperature)) {
+              Log.warningln(F("Error reading AHT temperature!"));
+              goodRead = false;
+            } else {
+              temperature = et.temperature;
+              Log.traceln("AHT temp: %FC %FF", temperature, temperature*1.8+32);
+            }
+            // humidity
+            if (isnan(eh.relative_humidity)) {
+              Log.warningln(F("Error reading AHT humidity!"));
+              goodRead = false;
+            }
+            else {
+              humidity = eh.relative_humidity;
+              Log.traceln("AHT humidity: %F%%", humidity);
+            }
+            tLastReading = millis();
+          } else {
+            Log.warningln(F("Error getting AHT event!"));
+            //tLastReading = millis();
+          }
+        }
+      } break;
+  
+      default:
+        break;
+    }
+
   }
 
   #if !defined(ESP8266) || (defined(ESP8266) && defined(DISABLE_LOGGING))
@@ -230,36 +250,28 @@ void CDevice::loop() {
 
 }
 
-#if defined(TEMP_SENSOR_DS18B20) || defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
 float CDevice::getTemperature(bool *current) {
   if (current != NULL) { 
     *current = millis() - tLastReading < STALE_READING_AGE_MS; 
   }
-  return _temperature;
-}
-#else
-float CDevice::getTemperature(bool *current) {
-  return 0;
-}
-#endif
 
-#if defined(TEMP_SENSOR_DHT) || defined(TEMP_SENSOR_BME280) || defined(TEMP_SENSOR_AHT)
+  return configuration.tempSensor != TEMP_SENSOR_UNSUPPORTED ? temperature: 0;
+}
+
 float CDevice::getHumidity(bool *current) {
   if (current != NULL) { 
     *current = millis() - tLastReading < STALE_READING_AGE_MS; 
   }
-  return _humidity;
+  return configuration.tempSensor != TEMP_SENSOR_UNSUPPORTED ? humidity: 0;
 }
-#endif
 
-#if defined(TEMP_SENSOR_BME280)
 float CDevice::getBaroPressure(bool *current) {
   if (current != NULL) { 
     *current = millis() - tLastReading < STALE_READING_AGE_MS; 
   }
-  return _baro_pressure;
+  return configuration.tempSensor == TEMP_SENSOR_BME280 ? baro_pressure: 0;
 }
-#endif
+
 
 #ifdef VOLTAGE_SENSOR
 float CDevice::getVoltage(bool *current) {  
@@ -274,6 +286,15 @@ float CDevice::getVoltage(bool *current) {
 JsonDocument& CDevice::getDeviceSettings() {
 
   jsonDeviceSettings["ts"] = millis();
+  jsonDeviceSettings["temp_sensor_type"] = configuration.tempSensor;
+
+  switch (configuration.tempSensor) {
+    case TEMP_SENSOR_DS18B20: jsonDeviceSettings["temp_sensor_type_label"] = "DS18B20"; break;
+    case TEMP_SENSOR_BME280: jsonDeviceSettings["temp_sensor_type_label"] = "BME280"; break;
+    case TEMP_SENSOR_DHT22: jsonDeviceSettings["temp_sensor_type_label"] = "DHT22"; break;
+    case TEMP_SENSOR_AHT20: jsonDeviceSettings["temp_sensor_type_label"] = "AHT20"; break;
+    default: jsonDeviceSettings["temp_sensor_type_label"] = "unsupported"; break;
+  }
 
   return jsonDeviceSettings;
 }

@@ -47,6 +47,10 @@ Access to OTA is at `/update` path at the device's IP. See Initial boot below on
 
 # Case
 
+STL files:
+[bottom](assets/case_bottom.stl)
+[top](assets/case_top.stl) - if too tight fitting, scale top up by 1%
+
 # Apache proxy setup
 
 Example configuration for exposing a local network device via Apache proxy. Strong advise to use SSL/HTTPS and appropriate authentication and authorization controls to reduce risk of bad actors. 

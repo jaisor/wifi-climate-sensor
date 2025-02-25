@@ -991,7 +991,37 @@ ESP8266 module</description>
 </library>
 <library name="Jaisor Lib" urn="urn:adsk.wipprod:fs.file:vf._iimQKIpT1GV9qWvNx8InQ">
 <packages>
-<package name="USB-TA-SLD" urn="urn:adsk.eagle:footprint:46693768/4" library_version="31">
+<package name="AHT20" urn="urn:adsk.eagle:footprint:46694042/4" library_version="37">
+<description>&lt;b&gt;PIN HEADER&lt;/b&gt;</description>
+<pad name="VIN" x="-3.81" y="-0.508" drill="1.016" shape="long" rot="R90"/>
+<pad name="GND" x="-1.27" y="-0.508" drill="1.016" shape="long" rot="R90"/>
+<pad name="SCL" x="1.27" y="-0.508" drill="1.016" shape="long" rot="R90"/>
+<pad name="SDA" x="3.81" y="-0.508" drill="1.016" shape="long" rot="R90"/>
+<text x="-5.1562" y="1.8288" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="-5.08" y="-4.445" size="1.27" layer="27">&gt;VALUE</text>
+<rectangle x1="1.016" y1="-0.254" x2="1.524" y2="0.254" layer="51"/>
+<rectangle x1="-1.524" y1="-0.254" x2="-1.016" y2="0.254" layer="51"/>
+<rectangle x1="-4.064" y1="-0.254" x2="-3.556" y2="0.254" layer="51"/>
+<rectangle x1="3.556" y1="-0.254" x2="4.064" y2="0.254" layer="51"/>
+<wire x1="5.08" y1="-1.905" x2="5.08" y2="1.27" width="0.127" layer="21"/>
+<wire x1="5.08" y1="1.27" x2="-5.08" y2="1.27" width="0.127" layer="21"/>
+<wire x1="-5.08" y1="1.27" x2="-5.08" y2="-1.905" width="0.127" layer="21"/>
+<wire x1="-5.08" y1="-1.905" x2="-4.445" y2="-2.54" width="0.127" layer="21"/>
+<wire x1="-4.445" y1="-2.54" x2="4.445" y2="-2.54" width="0.127" layer="21"/>
+<wire x1="4.445" y1="-2.54" x2="5.08" y2="-1.905" width="0.127" layer="21"/>
+</package>
+<package name="SMD_SW" urn="urn:adsk.eagle:footprint:46901572/1" locally_modified="yes" library_version="24">
+<smd name="1" x="0" y="0" dx="2.1844" dy="1.0668" layer="1" rot="R90"/>
+<smd name="2" x="1.397" y="0" dx="1.6764" dy="0.8128" layer="1" rot="R90"/>
+<smd name="3" x="-1.397" y="0" dx="1.6764" dy="0.8128" layer="1" rot="R270"/>
+<wire x1="-2.1" y1="1.35" x2="2.1" y2="1.35" width="0.127" layer="21"/>
+<wire x1="2.1" y1="1.35" x2="2.1" y2="-1.35" width="0.127" layer="21"/>
+<wire x1="2.1" y1="-1.35" x2="-2.1" y2="-1.35" width="0.127" layer="21"/>
+<wire x1="-2.1" y1="-1.35" x2="-2.1" y2="1.35" width="0.127" layer="21"/>
+<text x="0" y="2.54" size="1.27" layer="25" align="center">&gt;NAME</text>
+<text x="0" y="-3.81" size="1.27" layer="27" align="bottom-center">&gt;VALUE</text>
+</package>
+<package name="USB-TA-SLD" urn="urn:adsk.eagle:footprint:46693768/5" library_version="42">
 <wire x1="-6.225" y1="0.775" x2="-6.225" y2="-0.775" width="0" layer="46"/>
 <wire x1="-6.225" y1="-0.775" x2="-5.175" y2="-0.775" width="0" layer="46" curve="180"/>
 <wire x1="-5.175" y1="-0.775" x2="-5.175" y2="0.775" width="0" layer="46"/>
@@ -1031,56 +1061,29 @@ ESP8266 module</description>
 <pad name="4" x="-3.5" y="2.1" drill="1"/>
 <pad name="S2" x="-5.7" y="0" drill="1.05" shape="long" rot="R90"/>
 <pad name="S1" x="5.7" y="0" drill="1.05" shape="long" rot="R90"/>
-<hole x="2.25" y="-0.762" drill="1.25"/>
-<hole x="-2.25" y="-0.762" drill="1.25"/>
-</package>
-<package name="AHT20" urn="urn:adsk.eagle:footprint:46694042/3" locally_modified="yes" library_version="28" library_locally_modified="yes">
-<description>&lt;b&gt;PIN HEADER&lt;/b&gt;</description>
-<pad name="VIN" x="-3.81" y="-0.508" drill="1.016" shape="long" rot="R90"/>
-<pad name="GND" x="-1.27" y="-0.508" drill="1.016" shape="long" rot="R90"/>
-<pad name="SCL" x="1.27" y="-0.508" drill="1.016" shape="long" rot="R90"/>
-<pad name="SDA" x="3.81" y="-0.508" drill="1.016" shape="long" rot="R90"/>
-<text x="-5.1562" y="1.8288" size="1.27" layer="25" ratio="10">&gt;NAME</text>
-<text x="-5.08" y="-4.445" size="1.27" layer="27">&gt;VALUE</text>
-<rectangle x1="1.016" y1="-0.254" x2="1.524" y2="0.254" layer="51"/>
-<rectangle x1="-1.524" y1="-0.254" x2="-1.016" y2="0.254" layer="51"/>
-<rectangle x1="-4.064" y1="-0.254" x2="-3.556" y2="0.254" layer="51"/>
-<rectangle x1="3.556" y1="-0.254" x2="4.064" y2="0.254" layer="51"/>
-<wire x1="5.08" y1="-1.905" x2="5.08" y2="1.27" width="0.127" layer="21"/>
-<wire x1="5.08" y1="1.27" x2="-5.08" y2="1.27" width="0.127" layer="21"/>
-<wire x1="-5.08" y1="1.27" x2="-5.08" y2="-1.905" width="0.127" layer="21"/>
-<wire x1="-5.08" y1="-1.905" x2="-4.445" y2="-2.54" width="0.127" layer="21"/>
-<wire x1="-4.445" y1="-2.54" x2="4.445" y2="-2.54" width="0.127" layer="21"/>
-<wire x1="4.445" y1="-2.54" x2="5.08" y2="-1.905" width="0.127" layer="21"/>
+<hole x="2.25" y="0" drill="1.25"/>
+<hole x="-2.25" y="0" drill="1.25"/>
 </package>
 </packages>
 <packages3d>
-<package3d name="MOLEX_48037-0001" urn="urn:adsk.eagle:package:46693770/4" type="box">
-<packageinstances>
-<packageinstance name="USB-TA-SLD"/>
-</packageinstances>
-</package3d>
-<package3d name="1X04" urn="urn:adsk.eagle:package:46694044/3" type="model">
+<package3d name="1X04" urn="urn:adsk.eagle:package:46694044/4" type="model">
 <description>&lt;b&gt;PIN HEADER&lt;/b&gt;</description>
 <packageinstances>
 <packageinstance name="AHT20"/>
 </packageinstances>
 </package3d>
+<package3d name="SMD_SW_SOLDER" urn="urn:adsk.eagle:package:46901574/2" type="model">
+<packageinstances>
+<packageinstance name="SMD_SW"/>
+</packageinstances>
+</package3d>
+<package3d name="MOLEX_48037-0001" urn="urn:adsk.eagle:package:46693770/5" type="model">
+<packageinstances>
+<packageinstance name="USB-TA-SLD"/>
+</packageinstances>
+</package3d>
 </packages3d>
 <symbols>
-<symbol name="USB-TA-SLD" urn="urn:adsk.eagle:symbol:46693769/3" library_version="27">
-<wire x1="-5.08" y1="7.62" x2="-5.08" y2="-10.16" width="0.254" layer="94"/>
-<wire x1="-5.08" y1="-10.16" x2="5.08" y2="-10.16" width="0.254" layer="94"/>
-<wire x1="5.08" y1="-10.16" x2="5.08" y2="7.62" width="0.254" layer="94"/>
-<wire x1="5.08" y1="7.62" x2="-5.08" y2="7.62" width="0.254" layer="94"/>
-<text x="-5.08" y="8.89" size="1.778" layer="95">&gt;NAME</text>
-<text x="-5.08" y="-12.7" size="1.778" layer="96">&gt;VALUE</text>
-<pin name="VCC" x="-10.16" y="5.08" length="middle" direction="pwr"/>
-<pin name="D-" x="-10.16" y="2.54" length="middle"/>
-<pin name="D+" x="-10.16" y="0" length="middle"/>
-<pin name="GND" x="-10.16" y="-2.54" length="middle" direction="pwr"/>
-<pin name="SHIELD" x="-10.16" y="-7.62" length="middle" direction="pas"/>
-</symbol>
 <symbol name="AHT20" urn="urn:adsk.eagle:symbol:46694041/2" library_version="25">
 <wire x1="-4.826" y1="-5.08" x2="8.89" y2="-5.08" width="0.4064" layer="94"/>
 <wire x1="8.89" y1="-5.08" x2="8.89" y2="7.62" width="0.4064" layer="94"/>
@@ -1093,36 +1096,31 @@ ESP8266 module</description>
 <pin name="SCL" x="-10.16" y="0" length="middle"/>
 <pin name="SDA" x="-10.16" y="-2.54" length="middle"/>
 </symbol>
+<symbol name="SMD_SW" urn="urn:adsk.eagle:symbol:46901571/1" library_version="37">
+<wire x1="-2.508" y1="-2.54" x2="1.492" y2="-0.54" width="0.1524" layer="94"/>
+<wire x1="-2" y1="0.46" x2="2" y2="0.46" width="0.1524" layer="94"/>
+<text x="2.54" y="0" size="1.778" layer="95">&gt;NAME</text>
+<text x="2.54" y="-5.08" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="1" x="-5.08" y="-2.54" visible="pad" length="short"/>
+<pin name="2" x="5.08" y="-2.54" visible="pad" length="short" rot="R180"/>
+<pin name="3" x="0" y="3" visible="pad" length="short" rot="R270"/>
+</symbol>
+<symbol name="USB-TA-SLD" urn="urn:adsk.eagle:symbol:46693769/3" library_version="42">
+<wire x1="-5.08" y1="7.62" x2="-5.08" y2="-10.16" width="0.254" layer="94"/>
+<wire x1="-5.08" y1="-10.16" x2="5.08" y2="-10.16" width="0.254" layer="94"/>
+<wire x1="5.08" y1="-10.16" x2="5.08" y2="7.62" width="0.254" layer="94"/>
+<wire x1="5.08" y1="7.62" x2="-5.08" y2="7.62" width="0.254" layer="94"/>
+<text x="-5.08" y="8.89" size="1.778" layer="95">&gt;NAME</text>
+<text x="-5.08" y="-12.7" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="VCC" x="-10.16" y="5.08" length="middle" direction="pwr"/>
+<pin name="D-" x="-10.16" y="2.54" length="middle"/>
+<pin name="D+" x="-10.16" y="0" length="middle"/>
+<pin name="GND" x="-10.16" y="-2.54" length="middle" direction="pwr"/>
+<pin name="SHIELD" x="-10.16" y="-7.62" length="middle" direction="pas"/>
+</symbol>
 </symbols>
 <devicesets>
-<deviceset name="USB-TA-SLD" urn="urn:adsk.eagle:component:46693771/4" prefix="J" library_version="31">
-<gates>
-<gate name="G$1" symbol="USB-TA-SLD" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="USB-TA-SLD">
-<connects>
-<connect gate="G$1" pin="D+" pad="3"/>
-<connect gate="G$1" pin="D-" pad="2"/>
-<connect gate="G$1" pin="GND" pad="4"/>
-<connect gate="G$1" pin="SHIELD" pad="S1 S2"/>
-<connect gate="G$1" pin="VCC" pad="1"/>
-</connects>
-<package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:46693770/4"/>
-</package3dinstances>
-<technologies>
-<technology name="">
-<attribute name="MANUFACTURER" value="Molex"/>
-<attribute name="MAXIMUM_PACKAGE_HEIGHT" value="4.6mm"/>
-<attribute name="PARTREV" value="D"/>
-<attribute name="STANDARD" value="Manufacturer Recommendations"/>
-</technology>
-</technologies>
-</device>
-</devices>
-</deviceset>
-<deviceset name="AHT20" urn="urn:adsk.eagle:component:46694045/3" prefix="JP" library_version="28" library_locally_modified="yes">
+<deviceset name="AHT20" urn="urn:adsk.eagle:component:46694045/4" prefix="JP" library_version="37">
 <description>&lt;b&gt;PIN HEADER&lt;/b&gt;</description>
 <gates>
 <gate name="A" symbol="AHT20" x="0" y="0"/>
@@ -1136,7 +1134,7 @@ ESP8266 module</description>
 <connect gate="A" pin="VIN" pad="VIN"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:46694044/3"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:46694044/4"/>
 </package3dinstances>
 <technologies>
 <technology name="">
@@ -1160,672 +1158,67 @@ ESP8266 module</description>
 </device>
 </devices>
 </deviceset>
-</devicesets>
-</library>
-<library name="Bridge Pad" urn="urn:adsk.wipprod:fs.file:vf.oQWzh5Q1QJyMyLjqQiBJig">
-<description>&lt;b&gt;Resettable Fuses, Automotive Fuses</description>
-<packages>
-<package name="JUMPPAD" urn="urn:adsk.eagle:footprint:24934279/1" locally_modified="yes" library_version="2" library_locally_modified="yes">
-<description>Chip, 4.55 X 3.24 X 1.25 mm body
- &lt;p&gt;Chip package with body size 4.55 X 3.24 X 1.25 mm&lt;/p&gt;</description>
-<smd name="1" x="-1.345" y="0" dx="1.78" dy="3.15" layer="1"/>
-<smd name="2" x="1.345" y="0" dx="1.78" dy="3.15" layer="1"/>
-<wire x1="-2.365" y1="1.889" x2="2.365" y2="1.889" width="0.12" layer="21"/>
-<wire x1="-2.365" y1="-1.889" x2="2.365" y2="-1.889" width="0.12" layer="21"/>
-<wire x1="-2.365" y1="-1.705" x2="-2.365" y2="1.705" width="0.12" layer="51"/>
-<wire x1="-2.365" y1="1.705" x2="2.365" y2="1.705" width="0.12" layer="51"/>
-<wire x1="2.365" y1="1.705" x2="2.365" y2="-1.705" width="0.12" layer="51"/>
-<wire x1="2.365" y1="-1.705" x2="-2.365" y2="-1.705" width="0.12" layer="51"/>
-<text x="0" y="2.524" size="1.27" layer="25" align="bottom-center">&gt;NAME</text>
-<text x="0" y="-2.524" size="1.27" layer="27" align="top-center">&gt;VALUE</text>
-</package>
-</packages>
-<packages3d>
-<package3d name="FUSC4532X125" urn="urn:adsk.eagle:package:24934287/4" type="model">
-<description>Chip, 4.55 X 3.24 X 1.25 mm body
- &lt;p&gt;Chip package with body size 4.55 X 3.24 X 1.25 mm&lt;/p&gt;</description>
-<packageinstances>
-<packageinstance name="JUMPPAD"/>
-</packageinstances>
-</package3d>
-</packages3d>
-<symbols>
-<symbol name="FUSE" urn="urn:adsk.eagle:symbol:24934280/1" library_version="2" library_locally_modified="yes">
-<wire x1="-3.81" y1="-0.762" x2="3.81" y2="-0.762" width="0.254" layer="94"/>
-<wire x1="3.81" y1="0.762" x2="-3.81" y2="0.762" width="0.254" layer="94"/>
-<wire x1="3.81" y1="-0.762" x2="3.81" y2="0.762" width="0.254" layer="94"/>
-<wire x1="-3.81" y1="0.762" x2="-3.81" y2="-0.762" width="0.254" layer="94"/>
-<wire x1="-2.54" y1="0" x2="2.54" y2="0" width="0.1524" layer="94"/>
-<text x="0" y="2.5" size="1.778" layer="95" align="center">&gt;NAME</text>
-<text x="0" y="-2.5" size="1.778" layer="96" align="center">&gt;VALUE</text>
-<pin name="2" x="5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1" rot="R180"/>
-<pin name="1" x="-5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="1812L" urn="urn:adsk.eagle:component:24934292/6" prefix="F" library_version="2" library_locally_modified="yes">
-<description>1812L Series PTC provides surface mount overcurrent protection for applications where resettable protection is desired.
-&lt;br&gt;&lt;a href="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717"&gt;Datasheet&lt;br&gt;</description>
+<deviceset name="SMD_SW" urn="urn:adsk.eagle:component:46901575/2" prefix="S" library_version="38" library_locally_modified="yes">
+<description>Ultra-small Tactile Switch
+
+&lt;br&gt;Contact form : SPST-NO
+&lt;br&gt;&lt;br&gt;&lt;a href="https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3u.pdf"&gt;Datasheet&lt;/a &gt;&lt;br&gt;</description>
 <gates>
-<gate name="G$1" symbol="FUSE" x="0" y="0"/>
+<gate name="G$1" symbol="SMD_SW" x="0" y="0"/>
 </gates>
 <devices>
-<device name="" package="JUMPPAD">
+<device name="1100P(M)" package="SMD_SW">
 <connects>
 <connect gate="G$1" pin="1" pad="1"/>
 <connect gate="G$1" pin="2" pad="2"/>
+<connect gate="G$1" pin="3" pad="3"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:24934287/4"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:46901574/2"/>
 </package3dinstances>
 <technologies>
-<technology name="010">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 30 V 100 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="100 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="30 V" constant="no"/>
-<attribute name="MPN" value="1812L010DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
+<technology name="B3U-1100P(M)">
+<attribute name="CATEGORY" value="Switches" constant="no"/>
+<attribute name="DATASHEET" value="https://omronfs.omron.com/en_US/ecb/products/pdf/en-b3u.pdf" constant="no"/>
+<attribute name="DESCRIPTION" value="Tactile Switch SPST-NO Top Actuated Surface Mount" constant="no"/>
+<attribute name="MANUFACTURER" value="Omron Electronics Inc-EMC Div" constant="no"/>
+<attribute name="MPN" value="B3U-1100PM" constant="no"/>
+<attribute name="OPERATING_TEMPERATURE" value="-25°C ~ 70°C" constant="no"/>
+<attribute name="PACKAGE_SIZE" value="NA" constant="no"/>
 <attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
 <attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
 <attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="300 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
+<attribute name="SERIES" value="B3U" constant="no"/>
+<attribute name="SUBCATEGORY" value="Tactile Switches" constant="no"/>
+<attribute name="THERMALLOSS" value="" constant="no"/>
+<attribute name="TYPE" value="SPST-NO" constant="no"/>
 </technology>
-<technology name="010/60">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 60 V 100 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="100 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="60 V" constant="no"/>
-<attribute name="MPN" value="1812L010/60DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="300 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="014">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 60 V 140 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="140 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="60 V" constant="no"/>
-<attribute name="MPN" value="1812L014DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="340 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="020">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 30 V 200 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="200 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="30 V" constant="no"/>
-<attribute name="MPN" value="1812L020PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="400 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="020/60">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 60 V 200 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="200 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="60 V" constant="no"/>
-<attribute name="MPN" value="1812L020/60DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="400 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="035/30">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 30 V 350 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="350 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="30 V" constant="no"/>
-<attribute name="MPN" value="1812L035/30DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="750 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="035/60">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 60 V 350 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="350 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="60 V" constant="no"/>
-<attribute name="MPN" value="1812L035/60MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="700 mA" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="050">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 15 V 500 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="500 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="15 V" constant="no"/>
-<attribute name="MPN" value="1812L050PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="050/30">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 30 V 500 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="500 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="30 V" constant="no"/>
-<attribute name="MPN" value="1812L050/30PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="050/60">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 60 V 500 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="500 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="60 V" constant="no"/>
-<attribute name="MPN" value="1812L050/60MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="075">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 13.2 V 750 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="750 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="13.2 V" constant="no"/>
-<attribute name="MPN" value="1812L075PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="075/24">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 24 V 750 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="750 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="24 V" constant="no"/>
-<attribute name="MPN" value="1812L075/24DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="075/33">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 33 V 750 mA Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="750 mA" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="33 V" constant="no"/>
-<attribute name="MPN" value="1812L075/33DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="110">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 8 V 1.1 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.1 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="8 V" constant="no"/>
-<attribute name="MPN" value="1812L110PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="2.2 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="110/16">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 16 V 1.1 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.1 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="16 V" constant="no"/>
-<attribute name="MPN" value="1812L110/16DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1.95 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="110/24">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 24 V 1.1 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.1 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="24 V" constant="no"/>
-<attribute name="MPN" value="1812L110/24DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1.95 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="110/33">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 33 V 1.1 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.1 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="33 V" constant="no"/>
-<attribute name="MPN" value="1812L110/33MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="1.95 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="125/16">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 16 V 1.25 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.25 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="16 V" constant="no"/>
-<attribute name="MPN" value="1812L125/16DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="2.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="125/6">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 6 V 1.25 A Ih Surface Mount 1812 (4532 Metric)  Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.25 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="6 V" constant="no"/>
-<attribute name="MPN" value="1812L125/6PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="2.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="150">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 8 V 1.25 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.25 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="8 V" constant="no"/>
-<attribute name="MPN" value="1812L150ZR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="150/12">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 12 V 1.5 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.5 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="12 V" constant="no"/>
-<attribute name="MPN" value="1812L150/12DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="150/16">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 16 V 1.5 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.5 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="16 V" constant="no"/>
-<attribute name="MPN" value="1812L150/16DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="150/24">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 24 V 1.5 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.5 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="24 V" constant="no"/>
-<attribute name="MPN" value="1812L150/24MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="160">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 8 V 1.6 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.6 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="8 V" constant="no"/>
-<attribute name="MPN" value="1812L160PR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="2.8 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="160/12">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 12 V 1.6 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="1.6 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="12 V" constant="no"/>
-<attribute name="MPN" value="1812L160/12DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="2.8 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="200/12">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 12 V 2 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="2 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="12 V" constant="no"/>
-<attribute name="MPN" value="1812L200/12DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="200/16">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 16 V 2 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="2 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="16 V" constant="no"/>
-<attribute name="MPN" value="1812L200/16DR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="200TH">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 8 V 2 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="2 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="8 V" constant="no"/>
-<attribute name="MPN" value="1812L200THPR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="3.5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="260/12">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 12 V 2.6 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="2.6 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="12 V" constant="no"/>
-<attribute name="MPN" value="1812L260/12MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="260/16">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 16 V 2.6 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="2.6 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="16 V" constant="no"/>
-<attribute name="MPN" value="1812L260/16MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="260TH">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 8 V 2.6 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="2.6 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="8 V" constant="no"/>
-<attribute name="MPN" value="1812L260THDR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="5.2 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
-</technology>
-<technology name="300">
-<attribute name="CATEGORY" value="Fuses" constant="no"/>
-<attribute name="DATASHEET" value="https://www.littelfuse.com/assetdocs/resettable-ptcs-1812l-datasheet?assetguid=ca5c80cb-504e-4a8a-8e74-0107520a1717" constant="no"/>
-<attribute name="DESCRIPTION" value="Polymeric PTC Resettable Fuse 6 V 3 A Ih Surface Mount 1812 (4532 Metric) Concave" constant="no"/>
-<attribute name="HOLD_CURRENT" value="3 A" constant="no"/>
-<attribute name="MANUFACTURER" value="Littelfuse Inc." constant="no"/>
-<attribute name="MAX_VOLTAGE" value="6 V" constant="no"/>
-<attribute name="MPN" value="1812L300MR" constant="no"/>
-<attribute name="OPERATING_TEMPERATURE" value="-40°C ~ 85°C" constant="no"/>
-<attribute name="PACKAGE_SIZE" value="1812" constant="no"/>
-<attribute name="PACKAGE_TYPE" value="SMD" constant="no"/>
-<attribute name="PART_STATUS" value="ACTIVE" constant="no"/>
-<attribute name="ROHS" value="COMPLIANT" constant="no"/>
-<attribute name="SERIES" value="1812L" constant="no"/>
-<attribute name="SUBCATEGORY" value="PTC Resettable Fuses" constant="no"/>
-<attribute name="THERMALLOSS" value="0.8 W" constant="no"/>
-<attribute name="TRIP_CURRENT" value="5 A" constant="no"/>
-<attribute name="TYPE" value="Polymeric" constant="no"/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="USB-TA-SLD" urn="urn:adsk.eagle:component:46693771/5" prefix="J" library_version="42">
+<gates>
+<gate name="G$1" symbol="USB-TA-SLD" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="USB-TA-SLD">
+<connects>
+<connect gate="G$1" pin="D+" pad="3"/>
+<connect gate="G$1" pin="D-" pad="2"/>
+<connect gate="G$1" pin="GND" pad="4"/>
+<connect gate="G$1" pin="SHIELD" pad="S1 S2"/>
+<connect gate="G$1" pin="VCC" pad="1"/>
+</connects>
+<package3dinstances>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:46693770/5"/>
+</package3dinstances>
+<technologies>
+<technology name="">
+<attribute name="MANUFACTURER" value="Molex"/>
+<attribute name="MAXIMUM_PACKAGE_HEIGHT" value="4.6mm"/>
+<attribute name="PARTREV" value="D"/>
+<attribute name="STANDARD" value="Manufacturer Recommendations"/>
 </technology>
 </technologies>
 </device>
@@ -1848,29 +1241,29 @@ ESP8266 module</description>
 </classes>
 <parts>
 <part name="SUPPLY2" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="GND" device="" value="GND"/>
-<part name="WEMOS1" library="esp8266modules" library_urn="urn:adsk.wipprod:fs.file:vf.rqZeGJ0zQBSPVXdJP1cbFw" deviceset="WEMOS-D1-MINI" device="">
+<part name="WEMOS1" library="esp8266modules" library_urn="urn:adsk.wipprod:fs.file:vf.rqZeGJ0zQBSPVXdJP1cbFw" deviceset="WEMOS-D1-MINI" device="" value="U1">
 <attribute name="CN" value="ESP8266 D1"/>
 </part>
-<part name="SUPPLY1" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="GND" device="" value="GND"/>
-<part name="SUPPLY3" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+5V" device="" value="+5V"/>
 <part name="SUPPLY4" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+5V" device="" value="+5V"/>
 <part name="SUPPLY5" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+3.3V" device="" value="+3.3V"/>
 <part name="SUPPLY6" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+3.3V" device="" value="+3.3V"/>
 <part name="SUPPLY7" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="GND" device="" value="GND"/>
 <part name="SUPPLY8" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="GND" device="" value="GND"/>
 <part name="SUPPLY9" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+5V" device="" value="+5V"/>
-<part name="F1" library="Bridge Pad" library_urn="urn:adsk.wipprod:fs.file:vf.oQWzh5Q1QJyMyLjqQiBJig" deviceset="1812L" device="" package3d_urn="urn:adsk.eagle:package:24934287/4" technology="010"/>
 <part name="R4" library="Resistor" library_urn="urn:adsk.eagle:library:16378527" deviceset="R" device="CHIP-0805(2012-METRIC)" package3d_urn="urn:adsk.eagle:package:16378559/5" technology="_" value="1K"/>
 <part name="R1" library="Resistor" library_urn="urn:adsk.eagle:library:16378527" deviceset="R" device="CHIP-0805(2012-METRIC)" package3d_urn="urn:adsk.eagle:package:16378559/5" technology="_" value="22.1K"/>
 <part name="R2" library="Resistor" library_urn="urn:adsk.eagle:library:16378527" deviceset="R" device="CHIP-0805(2012-METRIC)" package3d_urn="urn:adsk.eagle:package:16378559/5" technology="_" value="100K"/>
-<part name="J1" library="Jaisor Lib" library_urn="urn:adsk.wipprod:fs.file:vf._iimQKIpT1GV9qWvNx8InQ" deviceset="USB-TA-SLD" device="" package3d_urn="urn:adsk.eagle:package:46693770/4" value="USB-TA-SLD"/>
-<part name="ATH20" library="Jaisor Lib" library_urn="urn:adsk.wipprod:fs.file:vf._iimQKIpT1GV9qWvNx8InQ" deviceset="AHT20" device="" package3d_urn="urn:adsk.eagle:package:46694044/3" value="AHT20"/>
+<part name="ATH20" library="Jaisor Lib" library_urn="urn:adsk.wipprod:fs.file:vf._iimQKIpT1GV9qWvNx8InQ" deviceset="AHT20" device="" package3d_urn="urn:adsk.eagle:package:46694044/4" value="AHT20"/>
 <part name="SUPPLY10" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+V" device="" value="VBUS"/>
+<part name="S1" library="Jaisor Lib" library_urn="urn:adsk.wipprod:fs.file:vf._iimQKIpT1GV9qWvNx8InQ" deviceset="SMD_SW" device="1100P(M)" package3d_urn="urn:adsk.eagle:package:46901574/2" technology="B3U-1100P(M)" value="SMD_SWB3U-1100P(M)1100P(M)"/>
+<part name="J1" library="Jaisor Lib" library_urn="urn:adsk.wipprod:fs.file:vf._iimQKIpT1GV9qWvNx8InQ" deviceset="USB-TA-SLD" device="" package3d_urn="urn:adsk.eagle:package:46693770/5"/>
+<part name="SUPPLY11" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="+5V" device="" value="+5V"/>
+<part name="SUPPLY1" library="Power_Symbols" library_urn="urn:adsk.eagle:library:16502351" deviceset="GND" device="" value="GND"/>
 </parts>
 <sheets>
 <sheet>
 <plain>
-<text x="-12.7" y="76.2" size="1.778" layer="91">Up to 16V for VBUS with given resisor values</text>
+<text x="-12.7" y="81.28" size="1.778" layer="91">Up to 16V for VBUS with given resisor values</text>
 </plain>
 <instances>
 <instance part="SUPPLY2" gate="G$1" x="45.72" y="20.32" smashed="yes">
@@ -1878,14 +1271,7 @@ ESP8266 module</description>
 </instance>
 <instance part="WEMOS1" gate="D1" x="25.4" y="33.02" smashed="yes">
 <attribute name="NAME" x="15.24" y="45.72" size="1.778" layer="95"/>
-<attribute name="VALUE" x="17.78" y="17.78" size="1.778" layer="96"/>
 <attribute name="CN" x="15.24" y="17.78" size="1.778" layer="96"/>
-</instance>
-<instance part="SUPPLY1" gate="G$1" x="111.76" y="40.64" smashed="yes">
-<attribute name="VALUE" x="111.76" y="38.1" size="1.778" layer="96" align="top-center"/>
-</instance>
-<instance part="SUPPLY3" gate="G$1" x="111.76" y="58.42" smashed="yes">
-<attribute name="VALUE" x="111.76" y="63.5" size="1.778" layer="96" align="top-center"/>
 </instance>
 <instance part="SUPPLY4" gate="G$1" x="50.8" y="25.4" smashed="yes">
 <attribute name="VALUE" x="50.8" y="30.48" size="1.778" layer="96" align="top-center"/>
@@ -1902,11 +1288,8 @@ ESP8266 module</description>
 <instance part="SUPPLY8" gate="G$1" x="-12.7" y="45.72" smashed="yes">
 <attribute name="VALUE" x="-12.7" y="43.18" size="1.778" layer="96" align="top-center"/>
 </instance>
-<instance part="SUPPLY9" gate="G$1" x="10.16" y="68.58" smashed="yes">
-<attribute name="VALUE" x="10.16" y="73.66" size="1.778" layer="96" align="top-center"/>
-</instance>
-<instance part="F1" gate="G$1" x="5.08" y="66.04" smashed="yes">
-<attribute name="NAME" x="5.08" y="68.54" size="1.778" layer="95" align="center"/>
+<instance part="SUPPLY9" gate="G$1" x="5.08" y="73.66" smashed="yes">
+<attribute name="VALUE" x="5.08" y="78.74" size="1.778" layer="96" align="top-center"/>
 </instance>
 <instance part="R4" gate="G$1" x="5.08" y="43.18" smashed="yes">
 <attribute name="NAME" x="5.08" y="45.72" size="1.778" layer="95" align="center"/>
@@ -1920,16 +1303,25 @@ ESP8266 module</description>
 <attribute name="NAME" x="0" y="53.34" size="1.778" layer="95" rot="R270" align="center"/>
 <attribute name="VALUE" x="-5.08" y="53.34" size="1.778" layer="96" rot="R270" align="center"/>
 </instance>
-<instance part="J1" gate="G$1" x="124.46" y="53.34" smashed="yes">
-<attribute name="NAME" x="119.38" y="62.23" size="1.778" layer="95"/>
-<attribute name="VALUE" x="119.38" y="40.64" size="1.778" layer="96"/>
-</instance>
 <instance part="ATH20" gate="A" x="88.9" y="50.8" smashed="yes">
 <attribute name="NAME" x="82.55" y="59.055" size="1.778" layer="95"/>
 <attribute name="VALUE" x="82.55" y="43.18" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY10" gate="G$1" x="-2.54" y="71.12" smashed="yes">
-<attribute name="VALUE" x="-2.54" y="73.66" size="1.778" layer="96" align="top-center"/>
+<instance part="SUPPLY10" gate="G$1" x="15.24" y="68.58" smashed="yes">
+<attribute name="VALUE" x="15.24" y="71.12" size="1.778" layer="96" align="top-center"/>
+</instance>
+<instance part="S1" gate="G$1" x="5.08" y="68.58" smashed="yes">
+<attribute name="NAME" x="7.62" y="68.58" size="1.778" layer="95"/>
+</instance>
+<instance part="J1" gate="G$1" x="88.9" y="22.86" smashed="yes">
+<attribute name="NAME" x="83.82" y="31.75" size="1.778" layer="95"/>
+<attribute name="VALUE" x="83.82" y="10.16" size="1.778" layer="96"/>
+</instance>
+<instance part="SUPPLY11" gate="G$1" x="78.74" y="27.94" smashed="yes">
+<attribute name="VALUE" x="78.74" y="33.02" size="1.778" layer="96" align="top-center"/>
+</instance>
+<instance part="SUPPLY1" gate="G$1" x="78.74" y="10.16" smashed="yes">
+<attribute name="VALUE" x="78.74" y="7.62" size="1.778" layer="96" align="top-center"/>
 </instance>
 </instances>
 <busses>
@@ -1954,21 +1346,14 @@ ESP8266 module</description>
 </segment>
 <segment>
 <pinref part="SUPPLY1" gate="G$1" pin="GND"/>
-<wire x1="114.3" y1="50.8" x2="111.76" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="111.76" y1="45.72" x2="111.76" y2="43.18" width="0.1524" layer="91"/>
-<wire x1="111.76" y1="50.8" x2="111.76" y2="45.72" width="0.1524" layer="91"/>
-<wire x1="111.76" y1="45.72" x2="114.3" y2="45.72" width="0.1524" layer="91"/>
-<junction x="111.76" y="45.72"/>
+<wire x1="78.74" y1="20.32" x2="78.74" y2="15.24" width="0.1524" layer="91"/>
+<wire x1="78.74" y1="15.24" x2="78.74" y2="12.7" width="0.1524" layer="91"/>
 <pinref part="J1" gate="G$1" pin="GND"/>
 <pinref part="J1" gate="G$1" pin="SHIELD"/>
+<junction x="78.74" y="15.24"/>
 </segment>
 </net>
 <net name="+5V" class="1">
-<segment>
-<pinref part="SUPPLY3" gate="G$1" pin="+5V"/>
-<wire x1="111.76" y1="58.42" x2="114.3" y2="58.42" width="0.1524" layer="91"/>
-<pinref part="J1" gate="G$1" pin="VCC"/>
-</segment>
 <segment>
 <pinref part="SUPPLY4" gate="G$1" pin="+5V"/>
 <wire x1="50.8" y1="25.4" x2="43.18" y2="25.4" width="0.1524" layer="91"/>
@@ -1976,8 +1361,12 @@ ESP8266 module</description>
 </segment>
 <segment>
 <pinref part="SUPPLY9" gate="G$1" pin="+5V"/>
-<wire x1="10.16" y1="66.04" x2="10.16" y2="68.58" width="0.1524" layer="91"/>
-<pinref part="F1" gate="G$1" pin="2"/>
+<wire x1="5.08" y1="73.66" x2="5.08" y2="71.58" width="0.1524" layer="91"/>
+<pinref part="S1" gate="G$1" pin="3"/>
+</segment>
+<segment>
+<pinref part="J1" gate="G$1" pin="VCC"/>
+<pinref part="SUPPLY11" gate="G$1" pin="+5V"/>
 </segment>
 </net>
 <net name="+3.3V" class="1">
@@ -2035,15 +1424,19 @@ ESP8266 module</description>
 <pinref part="ATH20" gate="A" pin="SDA"/>
 </segment>
 </net>
-<net name="VBUS" class="0">
+<net name="N$6" class="0">
 <segment>
-<pinref part="SUPPLY10" gate="G$1" pin="+V"/>
-<wire x1="-2.54" y1="68.58" x2="-2.54" y2="66.04" width="0.1524" layer="91"/>
 <wire x1="-2.54" y1="58.42" x2="-2.54" y2="66.04" width="0.1524" layer="91"/>
 <wire x1="-2.54" y1="66.04" x2="0" y2="66.04" width="0.1524" layer="91"/>
 <pinref part="R2" gate="G$1" pin="1"/>
-<pinref part="F1" gate="G$1" pin="1"/>
-<junction x="-2.54" y="66.04"/>
+<pinref part="S1" gate="G$1" pin="1"/>
+</segment>
+</net>
+<net name="VBUS" class="0">
+<segment>
+<wire x1="10.16" y1="66.04" x2="15.24" y2="66.04" width="0.1524" layer="91"/>
+<pinref part="SUPPLY10" gate="G$1" pin="+V"/>
+<pinref part="S1" gate="G$1" pin="2"/>
 </segment>
 </net>
 </nets>
