@@ -1,6 +1,6 @@
 # WiFi Climate Sensor
 
-![main screen](assets/main_screen.png)
+![device1](assets/device1.jpg)
 
 Supported features:
 * ESP8266 or ESP32 based with an ATH20 I2C sensor
@@ -19,7 +19,7 @@ In self-hosted AP mode, the device gives itself `192.168.4.1` IP address.
 
 The device can be connected to an existing AP using the `/wifi` option
 
-![wifi screenshot](assets/ss1.png)
+![wifi screenshot](assets/screen_mobile_wifi.jpg)
 
 ## Resetting / erasing configuration
 
@@ -46,10 +46,11 @@ Access to OTA is at `/update` path at the device's IP. See Initial boot below on
 
 
 # Case
+![case preview](assets/case.jpg)
 
 STL files:
-[bottom](assets/case_bottom.stl)
-[top](assets/case_top.stl) - if too tight fitting, scale top up by 1%
+* [bottom](assets/case_bottom.stl)
+* [top](assets/case_top.stl) - if too tight fitting, scale top up by 1%
 
 # Apache proxy setup
 
