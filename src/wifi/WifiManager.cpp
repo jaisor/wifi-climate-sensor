@@ -50,11 +50,7 @@ CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
   sensorJson["version"] = VERSION;
   sensorJson["version_short"] = VERSION_SHORT;
   sensorJson["build_number"] = BUILD_NUMBER;
-  sensorJson["deepSleepDurationSec"] = configuration.deepSleepDurationSec;
-  #ifdef VOLTAGE_SENSOR
-  sensorJson["voltageDivider"] = configuration.voltageDivider;
-  #endif
-
+  
   strcpy(SSID, configuration.wifiSsid);
   server = new AsyncWebServer(WEB_SERVER_PORT);
   mqtt.setClient(espClient);
@@ -126,7 +122,7 @@ void CWifiManager::listen() {
 #endif
   server->on("/api", HTTP_GET, std::bind(&CWifiManager::handleRestAPI_HP, this, std::placeholders::_1));
   AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler("/api", [this](AsyncWebServerRequest *request, JsonVariant &json) {
-    bool success = this->saveHP(json.as<JsonObject>());
+    bool success = this->updateConfigFromJson(json.as<JsonObject>());
     if (success) {
       handleRestAPI_HP(request);
     } else {
@@ -674,7 +670,8 @@ void CWifiManager::postSensorUpdate() {
   sensorJson["rf_msq_queue_size"] = messageQueue->getQueue()->size();
 #endif
 
-  sensorJson["device"] = sensorProvider->getDeviceSettings();
+  JsonDocument cfg = sensorProvider->getDeviceSettings();
+  sensorJson["config"] = cfg;
 
   // sensor Json
   sprintf_P(topic, "%s/json", configuration.mqttTopic);
@@ -709,27 +706,17 @@ void CWifiManager::mqttCallback(char *topic, uint8_t *payload, unsigned int leng
 
   Log.verboseln("Received %u bytes message on MQTT topic '%s'", length, topic);
   if (!strcmp(topic, mqttSubcribeTopicConfig)) {
-    deserializeJson(configJson, (const byte*)payload, length);
+    DeserializationError de = deserializeJson(configJson, (const byte*)payload, length);
+    if (de) {
+      Log.errorln("Failed to deserialize MQTT json: %s", de.c_str());
+      return;
+    }
 
     String jsonStr;
     serializeJson(configJson, jsonStr);
     Log.noticeln("Received configuration over MQTT with json: '%s'", jsonStr.c_str());
 
-    if (!configJson["name"].isNull()) {
-      Log.traceln("Setting 'name' to %s", configJson["name"].as<const char*>());
-      strncpy(configuration.name, configJson["name"].as<const char*>(), 128);
-    }
-
-    if (!configJson["mqttTopic"].isNull()) {
-      Log.traceln("Setting 'mqttTopic' to %s", configJson["mqttTopic"].as<const char*>());
-      strncpy(configuration.mqttTopic, configJson["mqttTopic"].as<const char*>(), 64);
-    }
-
-    if (!configJson["deepSleepDurationSec"].isNull()) {
-      uint16_t deepSleepDurationSec = configJson["deepSleepDurationSec"].as<unsigned int>();
-      configuration.deepSleepDurationSec = deepSleepDurationSec;
-      Log.traceln("Setting 'deepSleepDurationSec' to %u", deepSleepDurationSec);
-    }
+    updateConfigFromJson(configJson);
 
     // Delete the config message in case it was retained
     mqtt.publish(mqttSubcribeTopicConfig, NULL, 0, true);
@@ -806,31 +793,23 @@ bool CWifiManager::ensureMQTTConnected() {
   return true;
 }
 
-bool CWifiManager::saveHP(JsonObject jsonObj) {
-  /*
-  JsonDocument ac = sensorProvider->getDeviceSettings();
+bool CWifiManager::updateConfigFromJson(JsonDocument jsonObj) {
 
-    if (jsonObj.containsKey("power")) { ac["power"] = jsonObj["power"]; }
-    if (jsonObj.containsKey("mode")) { ac["mode"] = jsonObj["mode"]; }
-    
-    if (jsonObj.containsKey("temperature")) {
-      int tu = jsonObj["temperature"];
-      ac["temperature"] = roundf(configuration.tempUnit == TEMP_UNIT_CELSIUS ? tu : (((float)tu - 32.0) / 1.8));
-    }
+  if (!jsonObj["name"].isNull()) {
+    Log.traceln("Setting 'name' to %s", jsonObj["name"].as<const char*>());
+    strncpy(configuration.name, jsonObj["name"].as<const char*>(), 128);
+  }
 
-    if (jsonObj.containsKey("fan")) { ac["fan"] = jsonObj["fan"]; }
-    if (jsonObj.containsKey("vane")) { ac["vane"] = jsonObj["vane"]; }
-    if (jsonObj.containsKey("wideVane")) { ac["wideVane"] = jsonObj["wideVane"]; }
-    
-    String jsonStr;
-    serializeJson(ac, jsonStr);
-    Log.verboseln("new hpSettings: '%s'", jsonStr.c_str());
-    
-    return sensorProvider->setDeviceSettings(ac);
-    */
-   return false;
-}
+  if (!jsonObj["mqttTopic"].isNull()) {
+    Log.traceln("Setting 'mqttTopic' to %s", jsonObj["mqttTopic"].as<const char*>());
+    strncpy(configuration.mqttTopic, jsonObj["mqttTopic"].as<const char*>(), 64);
+  }
 
-bool CWifiManager::saveDevice(JsonObject jsonObj) {
+  if (!jsonObj["deepSleepDurationSec"].isNull()) {
+    uint16_t deepSleepDurationSec = jsonObj["deepSleepDurationSec"].as<unsigned int>();
+    configuration.deepSleepDurationSec = deepSleepDurationSec;
+    Log.traceln("Setting 'deepSleepDurationSec' to %u", deepSleepDurationSec);
+  }
+
   return true;
 }

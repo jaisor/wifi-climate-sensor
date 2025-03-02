@@ -296,6 +296,25 @@ JsonDocument& CDevice::getDeviceSettings() {
     default: jsonDeviceSettings["temp_sensor_type_label"] = "unsupported"; break;
   }
 
+  jsonDeviceSettings["tCorrection"][0]["actual"] = configuration.tCorrection[0].actual;
+  jsonDeviceSettings["tCorrection"][0]["measured"] = configuration.tCorrection[0].measured;
+  jsonDeviceSettings["tCorrection"][1]["actual"] = configuration.tCorrection[1].actual;
+  jsonDeviceSettings["tCorrection"][1]["measured"] = configuration.tCorrection[1].measured;
+
+  jsonDeviceSettings["hCorrection"][0]["actual"] = configuration.hCorrection[0].actual;
+  jsonDeviceSettings["hCorrection"][0]["measured"] = configuration.hCorrection[0].measured;
+  jsonDeviceSettings["hCorrection"][1]["actual"] = configuration.hCorrection[1].actual;
+  jsonDeviceSettings["hCorrection"][1]["measured"] = configuration.hCorrection[1].measured;
+
+  jsonDeviceSettings["tempUnit"] = configuration.tempUnit;
+  jsonDeviceSettings["ledEnabled"] = configuration.ledEnabled;
+
+  jsonDeviceSettings["deepSleepDurationSec"] = configuration.deepSleepDurationSec;
+  #ifdef VOLTAGE_SENSOR
+  jsonDeviceSettings["voltageDivider"] = configuration.voltageDivider;
+  #endif
+
+
   return jsonDeviceSettings;
 }
 

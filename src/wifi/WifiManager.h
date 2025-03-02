@@ -70,8 +70,7 @@ private:
   void postSensorUpdate();
   bool isApMode();
 
-  bool saveHP(JsonObject jsonObj);
-  bool saveDevice(JsonObject jsonObj);
+  bool updateConfigFromJson(JsonDocument jsonObj);
 
   void mqttCallback(char *topic, uint8_t *payload, unsigned int);
   bool ensureMQTTConnected();
