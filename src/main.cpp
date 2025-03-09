@@ -66,7 +66,6 @@ void setup() {
   }
 
   Log.infoln("Initialized");
-  intLEDOff();
 }
 
 void loop() {
@@ -75,7 +74,10 @@ void loop() {
     smoothBoot = true;
     EEPROM_clearFactoryReset();
     tsMillisBooted = millis();
-    intLEDOff();
+    if (configuration.deepSleepDurationSec == 0) {
+      // Keep the LED on if expected to sleep
+      intLEDOff();
+    }  
     Log.noticeln("Device booted smoothly!");
   }
 
@@ -104,6 +106,7 @@ void loop() {
     && millis() - tsMillisBooted > DEEP_SLEEP_MIN_AWAKE_MS
     && wifiManager->isJobDone() ) {
     delay(100);
+    intLEDOff();
     Log.noticeln("Initiating deep sleep for %u usec", configuration.deepSleepDurationSec );
     #ifdef ESP32
       digitalWrite(INTERNAL_LED_PIN, LOW);

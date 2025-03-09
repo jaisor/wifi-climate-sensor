@@ -156,8 +156,8 @@ const char htmlSensor[] PROGMEM = R"=====(
           </label>
           <br/>
           <label>
-            Voltage sensor divider <kbd>%0.1fV</kbd> / <kbd>%i ADC</kbd>
-            <input type='text' id='voltageDivider' name='voltageDivider' value='%0.1f'>
+            Voltage sensor divider <kbd>%0.2fV</kbd> / <kbd>%i ADC</kbd>
+            <input type='text' id='voltageDivider' name='voltageDivider' value='%0.2f'>
           </label>
           </br>
         </fieldset>

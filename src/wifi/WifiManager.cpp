@@ -624,9 +624,8 @@ void CWifiManager::postSensorUpdate() {
   strftime(buf, sizeof buf, "%FT%TZ", gmtime(&now));
   sensorJson["timestamp_iso8601"] = String(buf);
 
-  sensorJson["mqttConfigTopic"] = mqttSubcribeTopicConfig;
-  sensorJson["ledEnabled"] = configuration.ledEnabled;
-  sensorJson["ledEnabled_label"] = configuration.ledEnabled ? "yes" : "no";
+  sensorJson["led_enabled"] = configuration.ledEnabled;
+  sensorJson["led_enabled_text"] = configuration.ledEnabled ? "yes" : "no";
 
 #if defined(TEMP_SENSOR_PIN)
   bool sensorReady = sensorProvider->isSensorReady();
@@ -639,7 +638,7 @@ void CWifiManager::postSensorUpdate() {
       if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
         t = t * 1.8 + 32;
       }
-      sensorJson["temperature_raw"] = t;
+      sensorJson["temperature_uncorrected"] = t;
       sensorJson["temperature"] = correctT(t);
 
       char tunit[32];
@@ -649,7 +648,7 @@ void CWifiManager::postSensorUpdate() {
 
     float h = sensorProvider->getHumidity(&current);
     if (current) {
-      sensorJson["humidity_raw"] = h;
+      sensorJson["humidity_uncorrected"] = h;
       sensorJson["humidity"] = correctH(h);
       sensorJson["humidit_unit"] = "percent";
     }
@@ -671,6 +670,7 @@ void CWifiManager::postSensorUpdate() {
 #endif
 
   JsonDocument cfg = sensorProvider->getDeviceSettings();
+  sensorJson["config_topic"] = mqttSubcribeTopicConfig;
   sensorJson["config"] = cfg;
 
   // sensor Json
@@ -806,9 +806,13 @@ bool CWifiManager::updateConfigFromJson(JsonDocument jsonObj) {
   }
 
   if (!jsonObj["deepSleepDurationSec"].isNull()) {
-    uint16_t deepSleepDurationSec = jsonObj["deepSleepDurationSec"].as<unsigned int>();
-    configuration.deepSleepDurationSec = deepSleepDurationSec;
-    Log.traceln("Setting 'deepSleepDurationSec' to %u", deepSleepDurationSec);
+    Log.traceln("Setting 'deepSleepDurationSec' to %s", jsonObj["deepSleepDurationSec"].as<unsigned short>());
+    configuration.deepSleepDurationSec = jsonObj["deepSleepDurationSec"].as<unsigned short>();
+  }
+
+  if (!jsonObj["tempUnit"].isNull()) {
+    Log.traceln("Setting 'tempUnit' to %s", jsonObj["tempUnit"].as<unsigned char>());
+    configuration.tempUnit = jsonObj["tempUnit"].as<unsigned char>();
   }
 
   return true;

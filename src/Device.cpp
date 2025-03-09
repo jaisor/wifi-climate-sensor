@@ -29,7 +29,6 @@ CDevice::CDevice()
 
   switch (configuration.tempSensor) {
     case TEMP_SENSOR_DS18B20: {
-      jsonDeviceSettings["sensor_type"] = "DS18B20";
       pinMode(TEMP_SENSOR_PIN, INPUT_PULLUP);
       oneWire = new OneWire(TEMP_SENSOR_PIN);
       DeviceAddress da;
@@ -55,7 +54,6 @@ CDevice::CDevice()
     } break;
     
     case TEMP_SENSOR_BME280: {
-      jsonDeviceSettings["sensor_type"] = "BME280";
       bme280 = new Adafruit_BME280();
       if (!bme280->begin(BME280_I2C_ID)) {
         Log.errorln(F("BME280 sensor initialization failed with ID %x"), BME280_I2C_ID);
@@ -67,7 +65,6 @@ CDevice::CDevice()
     } break;
 
     case TEMP_SENSOR_DHT22: {
-      jsonDeviceSettings["sensor_type"] = "DHT22";
       dht = new DHT_Unified(TEMP_SENSOR_PIN, DHT22);
       dht->begin();
       sensor_t sensor;
@@ -84,7 +81,6 @@ CDevice::CDevice()
     } break;
 
     case TEMP_SENSOR_AHT20: {
-      jsonDeviceSettings["sensor_type"] = "AHT20";
       aht = new Adafruit_AHTX0();
       if (!aht->begin()) {
         Log.errorln("Failed to initialize AHT sensor, check wiring");
@@ -98,7 +94,6 @@ CDevice::CDevice()
 
     default:
       sensorReady = false;
-      jsonDeviceSettings["sensor_type"] = "unknown";
       Log.errorln(F("Unsupported temperature sensor"));
       break;
   }
@@ -115,11 +110,6 @@ CDevice::CDevice()
 #elif defined(SEEED_XIAO_M0)
 #endif
   
-  jsonDeviceSettings["connected"] = false;
-
-  #ifdef DEBUG_MOCK_HP
-    jsonDeviceSettings["connected"] = true;
-  #endif
   Log.infoln(F("Device initialized"));
 }
 
@@ -285,15 +275,16 @@ float CDevice::getVoltage(bool *current) {
 
 JsonDocument& CDevice::getDeviceSettings() {
 
-  jsonDeviceSettings["ts"] = millis();
-  jsonDeviceSettings["temp_sensor_type"] = configuration.tempSensor;
-
+  jsonDeviceSettings["name"] = configuration.name;
+  jsonDeviceSettings["wifiSsid"] = configuration.wifiSsid;
+  jsonDeviceSettings["tempSensor"] = configuration.tempSensor;
+  
   switch (configuration.tempSensor) {
-    case TEMP_SENSOR_DS18B20: jsonDeviceSettings["temp_sensor_type_label"] = "DS18B20"; break;
-    case TEMP_SENSOR_BME280: jsonDeviceSettings["temp_sensor_type_label"] = "BME280"; break;
-    case TEMP_SENSOR_DHT22: jsonDeviceSettings["temp_sensor_type_label"] = "DHT22"; break;
-    case TEMP_SENSOR_AHT20: jsonDeviceSettings["temp_sensor_type_label"] = "AHT20"; break;
-    default: jsonDeviceSettings["temp_sensor_type_label"] = "unsupported"; break;
+    case TEMP_SENSOR_DS18B20: jsonDeviceSettings["tempSensorStr"] = "DS18B20"; break;
+    case TEMP_SENSOR_BME280: jsonDeviceSettings["tempSensorStr"] = "BME280"; break;
+    case TEMP_SENSOR_DHT22: jsonDeviceSettings["tempSensorStr"] = "DHT22"; break;
+    case TEMP_SENSOR_AHT20: jsonDeviceSettings["tempSensorStr"] = "AHT20"; break;
+    default: jsonDeviceSettings["tempSensorStr"] = "`"; break;
   }
 
   jsonDeviceSettings["tCorrection"][0]["actual"] = configuration.tCorrection[0].actual;
