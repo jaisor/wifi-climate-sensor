@@ -25,7 +25,9 @@ void setup() {
 
   randomSeed(analogRead(0));
   
-  pinMode(D0, WAKEUP_PULLUP);
+  #ifdef ESP8266
+    pinMode(D0, WAKEUP_PULLUP);
+  #endif
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   intLEDOn();
 
