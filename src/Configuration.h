@@ -16,6 +16,12 @@
   #define WEB_LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+  #define SERIAL_MONITOR_BAUD 460800
+#else
+  #define SERIAL_MONITOR_BAUD 115200
+#endif
+
 #define EEPROM_FACTORY_RESET 0       // Byte to be used for factory reset device fails to start or is rebooted within 1 sec 3 consequitive times
 #define EEPROM_CONFIGURATION_START 1   // First EEPROM byte to be used for storing the configuration
 

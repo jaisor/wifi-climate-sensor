@@ -32,7 +32,7 @@ void setup() {
   intLEDOn();
 
   #ifndef DISABLE_LOGGING
-  Serial.begin(115200); while (!Serial); delay(100);
+  Serial.begin(SERIAL_MONITOR_BAUD); while (!Serial); delay(100);
   Log.begin(LOG_LEVEL, &Serial);
   Log.infoln(F("\n\nInitializing..."));
     #ifdef WEB_LOGGING
