@@ -97,7 +97,7 @@
     float actual;
   };
 
-  typedef enum {
+  typedef enum : uint8_t {
     TEMP_SENSOR_UNSUPPORTED = 0,
     TEMP_SENSOR_DS18B20 = 1,
     TEMP_SENSOR_BME280 = 2,

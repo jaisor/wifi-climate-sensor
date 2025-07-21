@@ -354,11 +354,14 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
     configuration.hCorrection[1].actual = atoff(request->arg("hActual2").c_str());
 
     configuration.voltageDivider = atoff(request->arg("voltageDivider").c_str());
-    
+
     EEPROM_saveConfig();
+    Log.verboseln("Config saved");
     
     request->redirect("sensor");
     tMillis = millis();
+
+    Log.infoln("Requesting reboot...");
     rebootNeeded = true;
 
   } else {

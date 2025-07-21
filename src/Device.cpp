@@ -54,6 +54,10 @@ CDevice::CDevice()
     } break;
     
     case TEMP_SENSOR_BME280: {
+      #ifdef CONFIG_IDF_TARGET_ESP32C3
+        // ESPC3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
+        Wire.begin(GPIO_NUM_6, GPIO_NUM_7);
+      #endif
       bme280 = new Adafruit_BME280();
       if (!bme280->begin(BME280_I2C_ID)) {
         Log.errorln(F("BME280 sensor initialization failed with ID %x"), BME280_I2C_ID);
@@ -94,7 +98,7 @@ CDevice::CDevice()
 
     default:
       sensorReady = false;
-      Log.errorln(F("Unsupported temperature sensor"));
+      Log.errorln(F("Unsupported temperature sensor: %u"), configuration.tempSensor);
       break;
   }
 
