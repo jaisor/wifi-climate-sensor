@@ -54,10 +54,6 @@ CDevice::CDevice()
     } break;
     
     case TEMP_SENSOR_BME280: {
-      #ifdef CONFIG_IDF_TARGET_ESP32C3
-        // ESPC3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
-        Wire.begin(GPIO_NUM_6, GPIO_NUM_7);
-      #endif
       bme280 = new Adafruit_BME280();
       if (!bme280->begin(BME280_I2C_ID)) {
         Log.errorln(F("BME280 sensor initialization failed with ID %x"), BME280_I2C_ID);
@@ -66,6 +62,8 @@ CDevice::CDevice()
         sensorReady = true;
         tMillisTemp = 0;
       }
+      minDelayMs = 100;
+      Log.noticeln(F("BME280 Initialized"));
     } break;
 
     case TEMP_SENSOR_DHT22: {
@@ -94,6 +92,7 @@ CDevice::CDevice()
         tMillisTemp = 0;
       }
       minDelayMs = 100;
+      Log.noticeln(F("AHT20 Initialized"));
     } break;
 
     default:
@@ -131,97 +130,93 @@ CDevice::~CDevice() {
 void CDevice::loop() {
 
   uint32_t delay = 1000;
-
   if (configuration.tempSensor == TEMP_SENSOR_DHT22 || 
     configuration.tempSensor == TEMP_SENSOR_BME280 || 
     configuration.tempSensor == TEMP_SENSOR_AHT20) {
-
     delay += minDelayMs;
   }
 
-  if (!sensorReady && millis() - tMillisTemp > delay) {
-    sensorReady = true;
+  if (!sensorReady || millis() - tMillisTemp < delay) {
+    return;
+  } else {
+    tMillisTemp = millis();
   }
 
-  if (sensorReady && millis() - tMillisTemp > delay) {
-
-    switch (configuration.tempSensor) {
-      case TEMP_SENSOR_DS18B20: {
-        if (ds18b20->isConversionComplete()) {
-          temperature = ds18b20->getTempC();
-          ds18b20->setResolution(12);
-          ds18b20->requestTemperatures();
-          tLastReading = millis();
-          Log.traceln(F("DS18B20 temp: %FC %FF"), temperature, temperature*1.8+32);
-        }
-      } break;
-      
-      case TEMP_SENSOR_BME280: {
-        temperature = bme280->readTemperature();
-        humidity = bme280->readHumidity();
-        baro_pressure = bme280->readPressure();
+  switch (configuration.tempSensor) {
+    case TEMP_SENSOR_DS18B20: {
+      if (ds18b20->isConversionComplete()) {
+        temperature = ds18b20->getTempC();
+        ds18b20->setResolution(12);
+        ds18b20->requestTemperatures();
         tLastReading = millis();
-      } break;
-  
-      case TEMP_SENSOR_DHT22: {
-        if (millis() - tLastReading > delay) {
-          sensors_event_t event;
+        Log.traceln(F("DS18B20 temp: %FC %FF"), temperature, temperature*1.8+32);
+      }
+    } break;
+    
+    case TEMP_SENSOR_BME280: {
+      temperature = bme280->readTemperature();
+      humidity = bme280->readHumidity();
+      baro_pressure = bme280->readPressure();
+      tLastReading = millis();
+    } break;
+
+    case TEMP_SENSOR_DHT22: {
+      if (millis() - tLastReading > delay) {
+        sensors_event_t event;
+        // temperature
+        dht->temperature().getEvent(&event);
+        if (isnan(event.temperature)) {
+          //Log.warningln(F("Error reading DHT temperature!"));
+        } else {
+          temperature = event.temperature;
+          Log.traceln(F("DHT temp: %FC %FF"), temperature, temperature*1.8+32);
+        }
+        // humidity
+        dht->humidity().getEvent(&event);
+        if (isnan(event.relative_humidity)) {
+          //Log.warningln(F("Error reading DHT humidity!"));
+        }
+        else {
+          humidity = event.relative_humidity;
+          Log.traceln(F("DHT humidity: %F%%"), humidity);
+        }
+        
+        tLastReading = millis();
+      }
+    } break;
+
+    case TEMP_SENSOR_AHT20: {
+      if (millis() - tLastReading > delay) {
+        sensors_event_t eh, et;
+        bool goodRead = aht->getEvent(&eh, &et);
+        if (goodRead) {
           // temperature
-          dht->temperature().getEvent(&event);
-          if (isnan(event.temperature)) {
-            //Log.warningln(F("Error reading DHT temperature!"));
+          if (isnan(et.temperature)) {
+            Log.warningln(F("Error reading AHT temperature!"));
+            goodRead = false;
           } else {
-            temperature = event.temperature;
-            Log.traceln(F("DHT temp: %FC %FF"), temperature, temperature*1.8+32);
+            temperature = et.temperature;
+            Log.traceln("AHT temp: %FC %FF", temperature, temperature*1.8+32);
           }
           // humidity
-          dht->humidity().getEvent(&event);
-          if (isnan(event.relative_humidity)) {
-            //Log.warningln(F("Error reading DHT humidity!"));
+          if (isnan(eh.relative_humidity)) {
+            Log.warningln(F("Error reading AHT humidity!"));
+            goodRead = false;
           }
           else {
-            humidity = event.relative_humidity;
-            Log.traceln(F("DHT humidity: %F%%"), humidity);
+            humidity = eh.relative_humidity;
+            Log.traceln("AHT humidity: %F%%", humidity);
           }
-          
           tLastReading = millis();
+        } else {
+          Log.warningln(F("Error getting AHT event!"));
+          //tLastReading = millis();
         }
-      } break;
-  
-      case TEMP_SENSOR_AHT20: {
-        if (millis() - tLastReading > delay) {
-          sensors_event_t eh, et;
-          bool goodRead = aht->getEvent(&eh, &et);
-          if (goodRead) {
-            // temperature
-            if (isnan(et.temperature)) {
-              Log.warningln(F("Error reading AHT temperature!"));
-              goodRead = false;
-            } else {
-              temperature = et.temperature;
-              Log.traceln("AHT temp: %FC %FF", temperature, temperature*1.8+32);
-            }
-            // humidity
-            if (isnan(eh.relative_humidity)) {
-              Log.warningln(F("Error reading AHT humidity!"));
-              goodRead = false;
-            }
-            else {
-              humidity = eh.relative_humidity;
-              Log.traceln("AHT humidity: %F%%", humidity);
-            }
-            tLastReading = millis();
-          } else {
-            Log.warningln(F("Error getting AHT event!"));
-            //tLastReading = millis();
-          }
-        }
-      } break;
-  
-      default:
-        break;
-    }
+      }
+    } break;
 
+    default:
+      break;
   }
 
   #if !defined(ESP8266) || (defined(ESP8266) && defined(DISABLE_LOGGING))

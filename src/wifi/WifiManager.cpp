@@ -223,9 +223,11 @@ void CWifiManager::loop() {
     mqtt.loop();
     
     if (!isApMode() && strlen(configuration.mqttServer) && strlen(configuration.mqttTopic)) {
-      if (millis() - tMillis > POST_UPDATE_INTERVAL) {
-        tMillis = millis();
-        postSensorUpdate();
+      if (millis() - tMillis > POST_UPDATE_INTERVAL || !postedSensorUpdate) {
+        if (postSensorUpdate()) {
+          postedSensorUpdate = true;
+          tMillis = millis();
+        }
       }
     }
 
@@ -505,11 +507,11 @@ void CWifiManager::handleRestAPI_HP(AsyncWebServerRequest *request) {
   Log.traceln("handleRestAPI_HP: %s", request->methodToString());
   intLEDOn();
   
-  JsonDocument ac = sensorProvider->getDeviceSettings();
-  
+  updateSensorJson();
+
   String jsonStr;
-  serializeJson(ac, jsonStr);
-  Log.verboseln("hpSettings: '%s'", jsonStr.c_str());
+  serializeJson(sensorJson, jsonStr);
+  Log.verboseln("API payload: '%s'", jsonStr.c_str());
 
   AsyncResponseStream *response = request->beginResponseStream("application/json; charset=UTF-8");
   response->print(jsonStr);
@@ -596,24 +598,44 @@ void CWifiManager::handleStyleCSS(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-void CWifiManager::postSensorUpdate() {
+bool CWifiManager::postSensorUpdate() {
 
   if (!strlen(configuration.mqttTopic)) {
     Log.warningln("Blank MQTT topic");
-    return;
+    return false;
   }
 
   if (!ensureMQTTConnected()) {
     Log.errorln("Unable to post sensor update due to MQTT connection issues");
-    return;
+    return false;
   }
 
   intLEDOn();
+  if (!updateSensorJson()) {
+    Log.errorln("Unable to update sensor JSON");
+    intLEDOff();
+    return false;
+  }
 
+  // sensor Json
   char topic[255];
-  int iv;
+  sprintf_P(topic, "%s/json", configuration.mqttTopic);
+  mqtt.beginPublish(topic, measureJson(sensorJson), false);
+  BufferingPrint bufferedClient(mqtt, 32);
+  serializeJson(sensorJson, bufferedClient);
+  bufferedClient.flush();
+  mqtt.endPublish();
 
-  iv = dBmtoPercentage(WiFi.RSSI());
+  String jsonStr;
+  serializeJson(sensorJson, jsonStr);
+  Log.noticeln("Sent '%s' json to MQTT topic '%s'", jsonStr.c_str(), topic);
+
+  intLEDOff();
+  return true;
+}
+
+bool CWifiManager::updateSensorJson() {
+  int iv = dBmtoPercentage(WiFi.RSSI());
   sensorJson["wifi_percent"] = iv;
   sensorJson["wifi_rssi"] = WiFi.RSSI();
 
@@ -631,36 +653,38 @@ void CWifiManager::postSensorUpdate() {
   sensorJson["led_enabled_text"] = configuration.ledEnabled ? "yes" : "no";
 
 #if defined(TEMP_SENSOR_PIN)
-  bool sensorReady = sensorProvider->isSensorReady();
+  if (!sensorProvider->isSensorReady()) {
+    Log.warningln("Sensor update asked when sensor is not ready");
+    return false;
+  }
   
-  if (sensorReady) {
-    bool current;
-
-    float t = sensorProvider->getTemperature(&current);
-    if (current) {
-      if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
-        t = t * 1.8 + 32;
-      }
-      sensorJson["temperature_uncorrected"] = t;
-      sensorJson["temperature"] = correctT(t);
-
-      char tunit[32];
-      snprintf(tunit, 32, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "Celsius" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "Fahrenheit" : "" )));
-      sensorJson["temperature_unit"] = tunit;
+  bool current;
+  float t = sensorProvider->getTemperature(&current);
+  if (current) {
+    if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
+      t = t * 1.8 + 32;
     }
+    sensorJson["temperature_uncorrected"] = t;
+    sensorJson["temperature"] = correctT(t);
+    sensorJson["temperature_current"] = current;
 
-    float h = sensorProvider->getHumidity(&current);
-    if (current) {
-      sensorJson["humidity_uncorrected"] = h;
-      sensorJson["humidity"] = correctH(h);
-      sensorJson["humidit_unit"] = "percent";
-    }
+    char tunit[32];
+    snprintf(tunit, 32, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "Celsius" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "Fahrenheit" : "" )));
+    sensorJson["temperature_unit"] = tunit;
+  }
+
+  float h = sensorProvider->getHumidity(&current);
+  if (current) {
+    sensorJson["humidity_uncorrected"] = h;
+    sensorJson["humidity"] = correctH(h);
+    sensorJson["humidit_unit"] = "percent";
+    sensorJson["humidity_current"] = current;
   }
 #endif
 #ifdef VOLTAGE_SENSOR
   if (configuration.voltageDivider > 0) {
     sensorJson["voltage_v"] = sensorProvider->getVoltage(NULL);
-    iv = analogRead(VOLTAGE_SENSOR_ADC_PIN);
+    int iv = analogRead(VOLTAGE_SENSOR_ADC_PIN);
     sensorJson["adc_raw"] = iv;
   }
 #endif
@@ -676,23 +700,11 @@ void CWifiManager::postSensorUpdate() {
   sensorJson["config_topic"] = mqttSubcribeTopicConfig;
   sensorJson["config"] = cfg;
 
-  // sensor Json
-  sprintf_P(topic, "%s/json", configuration.mqttTopic);
-  mqtt.beginPublish(topic, measureJson(sensorJson), false);
-  BufferingPrint bufferedClient(mqtt, 32);
-  serializeJson(sensorJson, bufferedClient);
-  bufferedClient.flush();
-  mqtt.endPublish();
-
-  String jsonStr;
-  serializeJson(sensorJson, jsonStr);
-  Log.noticeln("Sent '%s' json to MQTT topic '%s'", jsonStr.c_str(), topic);
-
-  postedSensorUpdate = true;
-  intLEDOff();
+  return true;
 }
 
 bool CWifiManager::isApMode() { 
+
 #if defined(ESP32)
   return WiFi.getMode() == WIFI_AP || WiFi.getMode() == WIFI_MODE_APSTA; 
 #elif defined(ESP8266)
@@ -726,7 +738,7 @@ void CWifiManager::mqttCallback(char *topic, uint8_t *payload, unsigned int leng
     Log.noticeln("Deleted config message");
 
     EEPROM_saveConfig();
-    postSensorUpdate();
+    postedSensorUpdate = postSensorUpdate();
   }
   
 }

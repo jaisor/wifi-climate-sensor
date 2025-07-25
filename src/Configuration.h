@@ -11,13 +11,14 @@
   #define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
-//#define WEB_LOGGING
+//#define WEB_LOGGING // When enabled log is available at http://<device_ip>/log
 #ifdef WEB_LOGGING
-  #define WEB_LOG_LEVEL LOG_LEVEL_INFO
+  #define WEB_LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
   #define SERIAL_MONITOR_BAUD 460800
+  #define DISABLE_LOGGING // Xiao's setup with USB requires serial to be initialized on the IDE else it blocks
 #else
   #define SERIAL_MONITOR_BAUD 115200
 #endif

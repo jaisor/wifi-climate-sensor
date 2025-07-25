@@ -67,10 +67,11 @@ private:
   void printHTMLBottom(Print *p);
   void printHTMLMain(Print *p);
 
-  void postSensorUpdate();
+  bool postSensorUpdate();
   bool isApMode();
 
   bool updateConfigFromJson(JsonDocument jsonObj);
+  bool updateSensorJson();
 
   void mqttCallback(char *topic, uint8_t *payload, unsigned int);
   bool ensureMQTTConnected();
