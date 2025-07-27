@@ -129,6 +129,21 @@ CDevice::~CDevice() {
 
 void CDevice::loop() {
 
+  #ifdef VOLTAGE_SENSOR
+  if (millis() - voltageSensorDelay > 50 || voltageValues.size() < VOLTAGE_SAMPLES) {
+    voltageSensorDelay = millis();
+    voltageValues.push_back(analogRead(VOLTAGE_SENSOR_ADC_PIN));
+    if(voltageValues.size() > VOLTAGE_SAMPLES){
+        voltageValues.pop_front();
+    }
+    voltageAvg = 0;
+    for(uint16_t i : voltageValues){
+      voltageAvg += i;
+    }
+    voltageAvg = voltageAvg / voltageValues.size();
+  }
+  #endif
+
   uint32_t delay = 1000;
   if (configuration.tempSensor == TEMP_SENSOR_DHT22 || 
     configuration.tempSensor == TEMP_SENSOR_BME280 || 
@@ -262,13 +277,17 @@ float CDevice::getBaroPressure(bool *current) {
 }
 
 
+
 #ifdef VOLTAGE_SENSOR
-float CDevice::getVoltage(bool *current) {  
-  if (current != NULL) { *current = true; } 
-  int vi = analogRead(VOLTAGE_SENSOR_ADC_PIN);
-  float v = (float)vi/configuration.voltageDivider;
-  Log.verboseln(F("Voltage raw: %i volts: %D"), vi, v);
-  return v; 
+float CDevice::getVoltage(bool *current) {
+  if (current != NULL) { *current = true; }
+  float v = voltageAvg / configuration.voltageDivider;
+  Log.verboseln(F("Voltage avg raw: %i volts: %F over %i samples"), voltageAvg, v, voltageValues.size());
+  return v;
+}
+uint16_t CDevice::getVoltageADC(bool *current) {
+  if (current != NULL) { *current = true; }
+  return voltageAvg;
 }
 #endif
 

@@ -403,7 +403,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
       sensorProvider->getHumidity(NULL),
       configuration.hCorrection[0].measured, configuration.hCorrection[0].actual,
       configuration.hCorrection[1].measured, configuration.hCorrection[1].actual,
-      sensorProvider->getVoltage(NULL), analogRead(VOLTAGE_SENSOR_ADC_PIN),
+      sensorProvider->getVoltage(NULL), sensorProvider->getVoltageADC(NULL),
       configuration.voltageDivider
     );
     printHTMLBottom(response);
@@ -684,8 +684,7 @@ bool CWifiManager::updateSensorJson() {
 #ifdef VOLTAGE_SENSOR
   if (configuration.voltageDivider > 0) {
     sensorJson["voltage_v"] = sensorProvider->getVoltage(NULL);
-    int iv = analogRead(VOLTAGE_SENSOR_ADC_PIN);
-    sensorJson["adc_raw"] = iv;
+    sensorJson["adc_raw"] = sensorProvider->getVoltageADC(NULL);
   }
 #endif
 #ifdef RADIO_RF24

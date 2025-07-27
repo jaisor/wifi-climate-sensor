@@ -13,7 +13,7 @@
 
 //#define WEB_LOGGING // When enabled log is available at http://<device_ip>/log
 #ifdef WEB_LOGGING
-  #define WEB_LOG_LEVEL LOG_LEVEL_NOTICE
+  #define WEB_LOG_LEVEL LOG_LEVEL_VERBOSE
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
@@ -53,6 +53,7 @@
 
 #define VOLTAGE_SENSOR  // ADC A0 using 0-3.3v voltage divider
 #ifdef VOLTAGE_SENSOR
+  #define VOLTAGE_SAMPLES 10 // Number of samples to take for averaging
   #define VOLTAGE_DIVIDER_VALUE 57.2 // 162.3 - 4.2v max; 57.2 - 14.8v max;
   #if defined(ESP32)
     #define VOLTAGE_SENSOR_ADC_PIN  A0
@@ -67,8 +68,8 @@
 
 #define TEMP_SENSOR
 #ifdef TEMP_SENSOR
-  #define TEMP_UNIT_CELSIUS     0
-  #define TEMP_UNIT_FAHRENHEIT  1
+  #define TEMP_UNIT_CELSIUS 0
+  #define TEMP_UNIT_FAHRENHEIT 1
   #define BME280_SEALEVELPRESSURE_HPA (1013.25)
   #define BME280_I2C_ID 0x76
   #if defined(ESP32)

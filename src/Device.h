@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <deque>
 #include "Configuration.h"
 #include "wifi/SensorProvider.h"
 
@@ -33,11 +34,12 @@ public:
   virtual float getHumidity(bool *current);
   virtual float getBaroPressure(bool *current);
   virtual float getVoltage(bool *current);
+  virtual uint16_t getVoltageADC(bool *current);
 
   #ifdef OLED
   Adafruit_SSD1306* display() const { return _display; };
   Adafruit_SSD1306 *_display;
-#endif
+  #endif
 
   virtual JsonDocument& getDeviceSettings();
   virtual bool setDeviceSettings(JsonDocument ac);
@@ -64,4 +66,10 @@ private:
   Adafruit_AHTX0 *aht;
 
   unsigned long minDelayMs;
+  #ifdef VOLTAGE_SENSOR
+  std::deque<uint16_t> voltageValues = {};
+  uint8_t voltageSamples = 0;
+  uint16_t voltageAvg = 0;
+  unsigned long voltageSensorDelay = 0;
+  #endif
 };

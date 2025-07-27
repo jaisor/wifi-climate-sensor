@@ -11,7 +11,6 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <Print.h>
-#include <vector>
 
 #include "BaseManager.h"
 #include "wifi/SensorProvider.h"
