@@ -55,7 +55,9 @@
 #ifdef VOLTAGE_SENSOR
   #define VOLTAGE_SAMPLES 10 // Number of samples to take for averaging
   #define VOLTAGE_DIVIDER_VALUE 57.2 // 162.3 - 4.2v max; 57.2 - 14.8v max;
-  #if defined(ESP32)
+  #if defined(CONFIG_IDF_TARGET_ESP32C3)
+    #define VOLTAGE_SENSOR_ADC_PIN  GPIO_NUM_2
+  #elif defined(ESP32)
     #define VOLTAGE_SENSOR_ADC_PIN  A0
   #elif defined(ESP8266)
     #define VOLTAGE_SENSOR_ADC_PIN  A0

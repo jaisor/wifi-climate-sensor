@@ -30,15 +30,19 @@ void EEPROM_clearFactoryReset() {
 }
 
 void EEPROM_saveConfig() {
+  #if defined(ESP32)
   portMUX_TYPE mx = portMUX_INITIALIZER_UNLOCKED;
   taskENTER_CRITICAL(&mx);
+  #endif
   
   Log.infoln("Saving configuration to EEPROM");
   EEPROM.put(EEPROM_CONFIGURATION_START, configuration);
   Log.verboseln("Committing EEPROM");
   EEPROM.commit();
 
+  #if defined(ESP32)
   taskEXIT_CRITICAL(&mx);
+  #endif
 }
 
 void EEPROM_loadConfig() {

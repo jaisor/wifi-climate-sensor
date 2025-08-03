@@ -23,21 +23,22 @@ unsigned long tsMillisBooted;
 
 void goToSleep() {
   WiFi.disconnect();
-  SPI.end();  //remove if not using SPI
-  Wire.end(); //remove if not using I2C
-  pinMode(SS, INPUT_PULLUP );
-  pinMode(6, INPUT_PULLUP );
-  pinMode(4, INPUT_PULLUP );
-  pinMode(8, INPUT_PULLUP );
-  pinMode(9, INPUT_PULLUP );
-  pinMode(1, INPUT_PULLUP );
-  pinMode(2, INPUT_PULLUP );
-  pinMode(3, INPUT_PULLUP );
-  pinMode(0, INPUT_PULLUP );
-  pinMode(5, INPUT_PULLUP );
-  
+  // WiFi.forceSleepBegin((uint64_t)configuration.deepSleepDurationSec * 1e6);
+
   #ifdef ESP32
     digitalWrite(INTERNAL_LED_PIN, LOW);
+    SPI.end();  //remove if not using SPI
+    Wire.end(); //remove if not using I2C
+    pinMode(SS, INPUT_PULLUP );
+    pinMode(6, INPUT_PULLUP );
+    pinMode(4, INPUT_PULLUP );
+    pinMode(8, INPUT_PULLUP );
+    pinMode(9, INPUT_PULLUP );
+    pinMode(1, INPUT_PULLUP );
+    pinMode(2, INPUT_PULLUP );
+    pinMode(3, INPUT_PULLUP );
+    pinMode(0, INPUT_PULLUP );
+    pinMode(5, INPUT_PULLUP );
     #ifdef CONFIG_IDF_TARGET_ESP32C3
       esp_sleep_enable_timer_wakeup((uint64_t)configuration.deepSleepDurationSec * 1e6);
       delay(1);
