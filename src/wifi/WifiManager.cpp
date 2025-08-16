@@ -70,8 +70,24 @@ void CWifiManager::connect() {
   if (strlen(SSID)) {
 
     // Join AP from Config
-    Log.infoln("Connecting to WiFi: '%s'", SSID);
+    Log.infoln("Connecting to WiFi: '%s' with power %i", SSID, configuration.wifiPower);
     WiFi.begin(SSID, configuration.wifiPassword);
+    wifi_power_t txPower = WIFI_POWER_19_5dBm; // default
+    switch (configuration.wifiPower) {
+      case 76: txPower = WIFI_POWER_19dBm; break;   // 19dBm
+      case 74: txPower = WIFI_POWER_18_5dBm; break; // 18.5dBm
+      case 68: txPower = WIFI_POWER_17dBm; break;   // 17dBm
+      case 60: txPower = WIFI_POWER_15dBm; break;   // 15dBm
+      case 52: txPower = WIFI_POWER_13dBm; break;   // 13dBm
+      case 44: txPower = WIFI_POWER_11dBm; break;   // 11dBm
+      case 34: txPower = WIFI_POWER_8_5dBm; break;  // 8.5dBm
+      case 28: txPower = WIFI_POWER_7dBm; break;    // 7dBm
+      case 20: txPower = WIFI_POWER_5dBm; break;    // 5dBm
+      case 8:  txPower = WIFI_POWER_2dBm; break;    // 2dBm
+      case -4: txPower = WIFI_POWER_MINUS_1dBm; break; // -1dBm
+      default: txPower = WIFI_POWER_19_5dBm; // 19.5dBm
+    }
+    WiFi.setTxPower(txPower);
     wifiRetries = 0;
 
   } else {
@@ -299,9 +315,11 @@ void CWifiManager::handleWifi(AsyncWebServerRequest *request) {
   if (request->method() == HTTP_POST) {
     String ssid = request->arg("ssid");
     String password = request->arg("password");
-    
+    String wifiPowerStr = request->arg("wifiPower");
+    int wifiPower = wifiPowerStr.length() > 0 ? wifiPowerStr.toInt() : 78;
+
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
-    
+
     printHTMLTop(response);
     response->printf("<p>Connecting to '%s' ... see you on the other side!</p>", ssid.c_str());
     printHTMLBottom(response);
@@ -310,8 +328,10 @@ void CWifiManager::handleWifi(AsyncWebServerRequest *request) {
 
     ssid.toCharArray(configuration.wifiSsid, sizeof(configuration.wifiSsid));
     password.toCharArray(configuration.wifiPassword, sizeof(configuration.wifiPassword));
+    configuration.wifiPower = wifiPower;
 
     Log.noticeln("Saved config SSID: '%s'", configuration.wifiSsid);
+    Log.noticeln("Saved WiFi Power: %i", configuration.wifiPower);
 
     EEPROM_saveConfig();
 

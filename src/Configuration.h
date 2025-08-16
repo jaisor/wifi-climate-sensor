@@ -120,6 +120,8 @@ struct configuration_t {
   #ifdef WIFI
     char wifiSsid[32];
     char wifiPassword[63];
+
+    int8_t wifiPower;
     
     // ntp
     char ntpServer[128];

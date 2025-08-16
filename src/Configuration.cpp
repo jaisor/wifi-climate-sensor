@@ -86,6 +86,7 @@ void EEPROM_loadConfig() {
       strcpy(configuration.mqttServer, "");
       configuration.mqttPort = 1883;
       strcpy(configuration.mqttTopic, "");
+      configuration.wifiPower = 78;
     #endif
 
     #ifdef VOLTAGE_SENSOR
