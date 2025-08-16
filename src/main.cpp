@@ -59,7 +59,7 @@ void setup() {
 
   #ifdef CONFIG_IDF_TARGET_ESP32C3
     // ESP32C3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
-    if (!Wire.begin(GPIO_NUM_6, GPIO_NUM_7)) {
+    if (!Wire.begin(GPIO_NUM_7, GPIO_NUM_6)) {
       Log.errorln(F("I2C Wire initialization failed"));
     };
     delay(1000);

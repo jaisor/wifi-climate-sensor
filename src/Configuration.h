@@ -6,12 +6,12 @@
 #include <StreamUtils.h>
 
 //#define DEBUG_MOCK_HP
-//#define DISABLE_LOGGING
+#define DISABLE_LOGGING
 #ifndef DISABLE_LOGGING
   #define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
-//#define WEB_LOGGING // When enabled log is available at http://<device_ip>/log
+#define WEB_LOGGING // When enabled log is available at http://<device_ip>/log
 #ifdef WEB_LOGGING
   #define WEB_LOG_LEVEL LOG_LEVEL_VERBOSE
 #endif
@@ -90,7 +90,12 @@
   #define OLED_I2C_ID  0x3C
 #endif
 
-#define INTERNAL_LED_PIN LED_BUILTIN
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+  #define INTERNAL_LED_PIN GPIO_NUM_8
+#else
+  #define INTERNAL_LED_PIN LED_BUILTIN
+#endif
+
 
 #define DEEP_SLEEP_INTERVAL_SEC 300 // 5 min
 #define DEEP_SLEEP_MIN_AWAKE_MS 5000 // Minimum time to remain awake after smooth boot

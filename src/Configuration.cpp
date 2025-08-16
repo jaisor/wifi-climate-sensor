@@ -17,16 +17,34 @@ uint8_t EEPROM_initAndCheckFactoryReset() {
   Log.noticeln("Factory reset counter: %i", resetCounter);
   Log.noticeln("EEPROM length: %i", EEPROM.length());
 
+  #if defined(ESP32)
+  portMUX_TYPE mx = portMUX_INITIALIZER_UNLOCKED;
+  taskENTER_CRITICAL(&mx);
+  #endif
+
   // Bump reset counter
   EEPROM.write(EEPROM_FACTORY_RESET, resetCounter + 1);
   EEPROM.commit();
+
+  #if defined(ESP32)
+  taskEXIT_CRITICAL(&mx);
+  #endif
 
   return resetCounter;
 }
 
 void EEPROM_clearFactoryReset() {
+  #if defined(ESP32)
+  portMUX_TYPE mx = portMUX_INITIALIZER_UNLOCKED;
+  taskENTER_CRITICAL(&mx);
+  #endif
+  
   EEPROM.write(EEPROM_FACTORY_RESET, 0);
   EEPROM.commit();
+
+  #if defined(ESP32)
+  taskEXIT_CRITICAL(&mx);
+  #endif
 }
 
 void EEPROM_saveConfig() {
