@@ -2,18 +2,27 @@ FILENAME_BUILDNO = 'versioning'
 FILENAME_VERSION_H = 'include/version.h'
 version = 'v0.1.'
 
+
 import datetime
+import os
 
 build_no = 0
+
 try:
-    with open(FILENAME_BUILDNO) as f:
-        build_no = int(f.readline()) + 1
+  with open(FILENAME_BUILDNO) as f:
+    build_no = int(f.readline())
 except:
-    print('Starting build number from 1..')
-    build_no = 1
-with open(FILENAME_BUILDNO, 'w+') as f:
+  print('Starting build number from 1..')
+  build_no = 1
+
+# Only increment build_no if BUILD environment variable is 'RELEASE'
+if os.environ.get('BUILD', '').upper() == 'RELEASE':
+  build_no += 1
+  with open(FILENAME_BUILDNO, 'w+') as f:
     f.write(str(build_no))
     print('Build number: {}'.format(build_no))
+else:
+  print('BUILD is not RELEASE, build number not incremented.')
 
 hf = """
 #ifndef BUILD_NUMBER

@@ -72,6 +72,7 @@ void CWifiManager::connect() {
     // Join AP from Config
     Log.infoln("Connecting to WiFi: '%s' with power %i", SSID, configuration.wifiPower);
     WiFi.begin(SSID, configuration.wifiPassword);
+#if defined(ESP32)
     wifi_power_t txPower = WIFI_POWER_19_5dBm; // default
     switch (configuration.wifiPower) {
       case 76: txPower = WIFI_POWER_19dBm; break;   // 19dBm
@@ -88,6 +89,24 @@ void CWifiManager::connect() {
       default: txPower = WIFI_POWER_19_5dBm; // 19.5dBm
     }
     WiFi.setTxPower(txPower);
+#elif defined(ESP8266)
+    float txPower = 20.5; // default 
+    switch (configuration.wifiPower) {
+      case 76: txPower = 19; break;   // 19dBm
+      case 74: txPower = 18.5; break; // 18.5dBm
+      case 68: txPower = 17; break;   // 17dBm
+      case 60: txPower = 15; break;   // 15dBm
+      case 52: txPower = 13; break;   // 13dBm
+      case 44: txPower = 11; break;   // 11dBm
+      case 34: txPower = 8.5; break;  // 8.5dBm
+      case 28: txPower = 7; break;    // 7dBm
+      case 20: txPower = 5; break;    // 5dBm
+      case 8:  txPower = 2; break;    // 2dBm
+      case -4: txPower = 1; break; // -1dBm
+      default: txPower = 20.5; // 19.5dBm
+    }
+    WiFi.setOutputPower(configuration.wifiPower); 
+#endif
     wifiRetries = 0;
 
   } else {
