@@ -22,3 +22,20 @@ jobs:
 
       - name: Build PlatformIO Project
         run: pio run
+      
+      - name: Copy Firmware to Artifacts
+        run: |
+          mkdir -p artifacts
+          cp .pio/build/esp32c3/firmware.bin artifacts/firmware_esp32c3.bin
+          cp .pio/build/esp32c3/firmware.elf artifacts/firmware_esp32c3.elf
+          cp .pio/build/esp32/firmware.bin artifacts/firmware_esp32.bin
+          cp .pio/build/esp32/firmware.elf artifacts/firmware_esp32.elf
+          cp .pio/build/esp8266/firmware.bin artifacts/firmware_esp8266.bin
+          cp .pio/build/esp8266/firmware.elf artifacts/firmware_esp8266.elf
+
+      - name: Download build files
+        uses: actions/download-artifact@v5
+        with:
+          path: artifacts/
+          pattern: firmware_*
+
