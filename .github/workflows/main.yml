@@ -26,13 +26,17 @@ jobs:
       - name: Download all bin and elf artifacts
         uses: actions/download-artifact@v5
         with:
-          pattern: '.pio/build/**/*.{bin,elf}'
+          pattern: '.pio/build/esp32c3/*.{bin,elf}'
           path: ./artifacts
       
       - name: Download all bin and elf artifacts 2
         uses: actions/download-artifact@v5
         with:
-          pattern: '.pio/build/**/*.{bin,elf}'
+          pattern: '.pio/build/esp32c3/*.{bin,elf}'
           path: ./.pio/build
 
+      - name: List artifacts
+        run: |
+          ls .pio/build/ |
+          ls .pio/build/esp32c3/
 
