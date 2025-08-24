@@ -23,10 +23,15 @@ jobs:
         run: pip install --upgrade platformio intelhex
       - name: Build PlatformIO Project
         run: pio run -e ${{ matrix.environment }}
-      - name: Upload Build Artifacts
+      - name: Upload BIN Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.environment }}.bin
-          path: .pio/build/${{ matrix.version }}/firmware.bin
+          path: .pio/build/${{ matrix.environment }}/firmware.bin
           if-no-files-found: error
-          
+      - name: Upload ELF Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.environment }}.elf
+          path: .pio/build/${{ matrix.environment }}/firmware.elf
+          if-no-files-found: error
