@@ -10,28 +10,51 @@ jobs:
         environment: [esp32c3, esp32, esp8266]
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Get Next Version
+        id: semver
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          branch: main
+
       - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
           key: ${{ runner.os }}-pio
+      
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio intelhex
+
       - name: Build PlatformIO Project
-        run: pio run -e ${{ matrix.environment }}
+        run: SEMVER=${{ steps.semver.outputs.next }} && pio run -e ${{ matrix.environment }}
+
       - name: Upload BIN Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.environment }}.bin
           path: .pio/build/${{ matrix.environment }}/firmware.bin
           if-no-files-found: error
+
       - name: Upload ELF Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.environment }}.elf
           path: .pio/build/${{ matrix.environment }}/firmware.elf
           if-no-files-found: error
+        
+      - name: Create Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: true
+          draft: false
+          makeLatest: true
+          name: ${{ steps.semver.outputs.next }}
+          body: Changelog Contents
+          token: ${{ github.token }}

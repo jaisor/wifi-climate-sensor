@@ -105,7 +105,7 @@ void CWifiManager::connect() {
       case -4: txPower = 1; break; // -1dBm
       default: txPower = 20.5; // 19.5dBm
     }
-    WiFi.setOutputPower(configuration.wifiPower); 
+    WiFi.setOutputPower(txPower); 
 #endif
     wifiRetries = 0;
 
