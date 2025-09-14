@@ -56,15 +56,6 @@ void goToSleep() {
 void setup() {
 
   randomSeed(analogRead(0));
-
-  #ifdef CONFIG_IDF_TARGET_ESP32C3
-    // ESP32C3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
-    if (!Wire.begin(GPIO_NUM_7, GPIO_NUM_6)) {
-      Log.errorln(F("I2C Wire initialization failed"));
-    };
-    delay(1000);
-  #endif
-
   
   #ifdef ESP8266
     pinMode(D0, WAKEUP_PULLUP);

@@ -74,7 +74,9 @@
   #define TEMP_UNIT_FAHRENHEIT 1
   #define BME280_SEALEVELPRESSURE_HPA (1013.25)
   #define BME280_I2C_ID 0x76
-  #if defined(ESP32)
+  #if defined(CONFIG_IDF_TARGET_ESP32C3)
+    #define TEMP_SENSOR_PIN GPIO_NUM_6
+  #elif defined(ESP32)
     #define TEMP_SENSOR_PIN 0
   #elif defined(ESP8266)
     #define TEMP_SENSOR_PIN D3

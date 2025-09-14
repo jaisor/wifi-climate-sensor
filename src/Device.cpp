@@ -25,6 +25,16 @@ CDevice::CDevice()
   _display->setTextColor(WHITE);
 #endif
 
+  #ifdef CONFIG_IDF_TARGET_ESP32C3
+    if (configuration.tempSensor!=TEMP_SENSOR_DS18B20) {
+      // ESP32C3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
+      if (Wire.begin(GPIO_NUM_7, GPIO_NUM_6)) {
+        Log.errorln(F("ESP32C3 I2C Wire initialization failed on pins SDA:%d, SCL:%d"), GPIO_NUM_7, GPIO_NUM_6);
+      };
+      delay(1000);
+    }
+  #endif
+
   tLastReading = 0;
 
   switch (configuration.tempSensor) {
@@ -44,7 +54,7 @@ CDevice::CDevice()
         }
         addr += String(da[i], HEX);
       }
-      Log.noticeln(F("DS18B20 sensor at address: %s"), addr.c_str());
+      Log.noticeln(F("DS18B20 sensor on pin %d at address: %s"), TEMP_SENSOR_PIN, addr.c_str());
       
       ds18b20->setResolution(12);
       ds18b20->requestTemperatures();
@@ -144,14 +154,14 @@ void CDevice::loop() {
   }
   #endif
 
-  uint32_t delay = 1000;
+  uint32_t delayMs = 1000;
   if (configuration.tempSensor == TEMP_SENSOR_DHT22 || 
     configuration.tempSensor == TEMP_SENSOR_BME280 || 
     configuration.tempSensor == TEMP_SENSOR_AHT20) {
-    delay += minDelayMs;
+    delayMs += minDelayMs;
   }
 
-  if (!sensorReady || millis() - tMillisTemp < delay) {
+  if (!sensorReady || millis() - tMillisTemp < delayMs) {
     return;
   } else {
     tMillisTemp = millis();
@@ -165,6 +175,9 @@ void CDevice::loop() {
         ds18b20->requestTemperatures();
         tLastReading = millis();
         Log.traceln(F("DS18B20 temp: %FC %FF"), temperature, temperature*1.8+32);
+      } else {
+        Log.warningln(F("DS18B20 conversion not complete"));
+        delay(100);
       }
     } break;
     
@@ -176,7 +189,7 @@ void CDevice::loop() {
     } break;
 
     case TEMP_SENSOR_DHT22: {
-      if (millis() - tLastReading > delay) {
+      if (millis() - tLastReading > delayMs) {
         sensors_event_t event;
         // temperature
         dht->temperature().getEvent(&event);
@@ -201,7 +214,7 @@ void CDevice::loop() {
     } break;
 
     case TEMP_SENSOR_AHT20: {
-      if (millis() - tLastReading > delay) {
+      if (millis() - tLastReading > delayMs) {
         sensors_event_t eh, et;
         bool goodRead = aht->getEvent(&eh, &et);
         if (goodRead) {
