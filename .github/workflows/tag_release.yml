@@ -2,9 +2,7 @@ name: Build and release a tag
 
 on:
   push:
-    branches:
-      - main
-    tags:      
+    tags:
       - '*'
 
 jobs:
@@ -43,14 +41,14 @@ jobs:
       - name: Upload BIN Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.environment }}.bin
+          name: firmware-${{ matrix.environment }}-${{ steps.semver.outputs.next }}.bin
           path: .pio/build/${{ matrix.environment }}/firmware.bin
           if-no-files-found: error
 
       - name: Upload ELF Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.environment }}.elf
+          name: firmware-${{ matrix.environment }}-${{ steps.semver.outputs.next }}.elf
           path: .pio/build/${{ matrix.environment }}/firmware.elf
           if-no-files-found: error
         
