@@ -1,9 +1,11 @@
-name: Build on main push
+name: Build and release a tag
 
 on:
   push:
     branches:
       - main
+    tags:      
+      - '*'
 
 jobs:
   build:
@@ -51,4 +53,13 @@ jobs:
           name: firmware-${{ matrix.environment }}.elf
           path: .pio/build/${{ matrix.environment }}/firmware.elf
           if-no-files-found: error
-          
+        
+      - name: Create Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: true
+          draft: false
+          makeLatest: true
+          name: ${{ steps.semver.outputs.next }}
+          body: Changelog Contents
+          token: ${{ github.token }}
