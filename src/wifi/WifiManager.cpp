@@ -49,7 +49,6 @@ CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
   sensorJson["dev_name"] = configuration.name;
   sensorJson["version"] = VERSION;
   sensorJson["version_short"] = VERSION_SHORT;
-  sensorJson["build_number"] = BUILD_NUMBER;
   
   strcpy(SSID, configuration.wifiSsid);
   server = new AsyncWebServer(WEB_SERVER_PORT);
