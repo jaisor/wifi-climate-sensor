@@ -37,6 +37,7 @@ CDevice::CDevice()
 
   tLastReading = 0;
 
+  #ifdef TEMP_SENSOR
   switch (configuration.tempSensor) {
     case TEMP_SENSOR_DS18B20: {
       pinMode(TEMP_SENSOR_PIN, INPUT_PULLUP);
@@ -110,13 +111,14 @@ CDevice::CDevice()
       Log.errorln(F("Unsupported temperature sensor: %u"), configuration.tempSensor);
       break;
   }
+  #endif
 
-#ifdef VOLTAGE_SENSOR
+  #ifdef VOLTAGE_SENSOR
   #if SEEED_XIAO_M0
     analogReadResolution(12);
   #endif
   pinMode(VOLTAGE_SENSOR_ADC_PIN, INPUT);
-#endif
+  #endif
 
 #if defined(ESP32)
 #elif defined(ESP8266)
@@ -154,6 +156,7 @@ void CDevice::loop() {
   }
   #endif
 
+  #ifdef TEMP_SENSOR
   uint32_t delayMs = 1000;
   if (configuration.tempSensor == TEMP_SENSOR_DHT22 || 
     configuration.tempSensor == TEMP_SENSOR_BME280 || 
@@ -246,6 +249,7 @@ void CDevice::loop() {
     default:
       break;
   }
+  #endif
 
   #if !defined(ESP8266) || (defined(ESP8266) && defined(DISABLE_LOGGING))
   //.sync();
@@ -267,6 +271,7 @@ void CDevice::loop() {
 
 }
 
+#ifdef TEMP_SENSOR
 float CDevice::getTemperature(bool *current) {
   if (current != NULL) { 
     *current = millis() - tLastReading < STALE_READING_AGE_MS; 
@@ -288,7 +293,7 @@ float CDevice::getBaroPressure(bool *current) {
   }
   return configuration.tempSensor == TEMP_SENSOR_BME280 ? baro_pressure: 0;
 }
-
+#endif
 
 
 #ifdef VOLTAGE_SENSOR
@@ -308,6 +313,8 @@ JsonDocument& CDevice::getDeviceSettings() {
 
   jsonDeviceSettings["name"] = configuration.name;
   jsonDeviceSettings["wifiSsid"] = configuration.wifiSsid;
+
+  #ifdef TEMP_SENSOR
   jsonDeviceSettings["tempSensor"] = configuration.tempSensor;
   
   switch (configuration.tempSensor) {
@@ -329,6 +336,8 @@ JsonDocument& CDevice::getDeviceSettings() {
   jsonDeviceSettings["hCorrection"][1]["measured"] = configuration.hCorrection[1].measured;
 
   jsonDeviceSettings["tempUnit"] = configuration.tempUnit;
+  #endif
+
   jsonDeviceSettings["ledEnabled"] = configuration.ledEnabled;
 
   jsonDeviceSettings["deepSleepDurationSec"] = configuration.deepSleepDurationSec;

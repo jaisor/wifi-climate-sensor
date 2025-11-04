@@ -50,9 +50,7 @@ private:
 
   void handleRoot(AsyncWebServerRequest *request);
   void handleWifi(AsyncWebServerRequest *request);
-  #ifdef TEMP_SENSOR
   void handleSensor(AsyncWebServerRequest *request);
-  #endif
   void handleDevice(AsyncWebServerRequest *request);
   void handleFactoryReset(AsyncWebServerRequest *request);
   void handleReboot(AsyncWebServerRequest *request);

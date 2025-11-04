@@ -1,4 +1,5 @@
 #include "wifi/HTMLAssets.h"
+#include "Configuration.h"
 
 const char htmlTop[] PROGMEM = R"=====(
 <!doctype html>
@@ -109,6 +110,7 @@ const char htmlWifi[] PROGMEM = R"=====(
       </form>
 )=====";
 
+#ifdef TEMP_SENSOR
 const char htmlSensor[] PROGMEM = R"=====(
       <h3>Sensor Settings</h3>
       <form method='POST' action='sensor' enctype='application/x-www-form-urlencoded' delay='10000'>
@@ -182,6 +184,21 @@ const char htmlSensor[] PROGMEM = R"=====(
         <button type='submit' value='Submit'>Submit...</button>
       </form>
 )=====";
+#else
+const char htmlSensor[] PROGMEM = R"=====(
+      <h3>Sensor Settings</h3>
+      <form method='POST' action='sensor' enctype='application/x-www-form-urlencoded' delay='10000'>
+        <fieldset>
+          <label>
+            Voltage sensor divider <kbd>%0.2fV</kbd> / <kbd>%i ADC</kbd>
+            <input type='text' id='voltageDivider' name='voltageDivider' value='%0.2f'>
+          </label>
+          </br>
+        </fieldset>
+        <button type='submit' value='Submit'>Submit...</button>
+      </form>
+)=====";
+#endif
 
 const char htmlDevice[] PROGMEM = R"=====(
       <h3>Device Settings</h3>

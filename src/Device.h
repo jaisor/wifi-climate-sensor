@@ -30,9 +30,11 @@ public:
 
   virtual bool isSensorReady() { return sensorReady; };
   
+  #ifdef TEMP_SENSOR
   virtual float getTemperature(bool *current);
   virtual float getHumidity(bool *current);
   virtual float getBaroPressure(bool *current);
+  #endif
   virtual float getVoltage(bool *current);
   virtual uint16_t getVoltageADC(bool *current);
 

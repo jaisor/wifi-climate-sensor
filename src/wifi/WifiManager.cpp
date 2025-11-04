@@ -136,9 +136,7 @@ void CWifiManager::listen() {
   server->on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(404); });
   //
   server->on("/wifi", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleWifi, this, std::placeholders::_1));
-#ifdef TEMP_SENSOR
   server->on("/sensor", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleSensor, this, std::placeholders::_1));
-#endif
   server->on("/device", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleDevice, this, std::placeholders::_1));
   //
   server->on("/factory_reset", HTTP_POST, std::bind(&CWifiManager::handleFactoryReset, this, std::placeholders::_1));
@@ -368,13 +366,13 @@ void CWifiManager::handleWifi(AsyncWebServerRequest *request) {
   intLEDOff();
 }
 
-#ifdef TEMP_SENSOR
 void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
   Log.traceln("handleSensor: %s", request->methodToString());
   intLEDOn();
 
   if (request->method() == HTTP_POST) {
     
+    #ifdef TEMP_SENSOR
     uint16_t tempUnit = atoi(request->arg("tempUnit").c_str());
     configuration.tempUnit = tempUnit;
     Log.infoln("Temperature unit: %u", tempUnit);
@@ -392,6 +390,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
     configuration.hCorrection[0].actual = atoff(request->arg("hActual1").c_str());
     configuration.hCorrection[1].measured = atoff(request->arg("hMeasured2").c_str());
     configuration.hCorrection[1].actual = atoff(request->arg("hActual2").c_str());
+    #endif
 
     configuration.voltageDivider = atoff(request->arg("voltageDivider").c_str());
 
@@ -406,6 +405,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
 
   } else {
 
+    #ifdef TEMP_SENSOR
     char tempUnit[256];
     snprintf(tempUnit, 256, "<option %s value='0'>Celsius</option>\
       <option %s value='1'>Fahrenheit</option>", 
@@ -444,6 +444,14 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
       sensorProvider->getVoltage(NULL), sensorProvider->getVoltageADC(NULL),
       configuration.voltageDivider
     );
+    #else
+    AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8");
+    printHTMLTop(response);
+    response->printf_P(htmlSensor, 
+      sensorProvider->getVoltage(NULL), sensorProvider->getVoltageADC(NULL),
+      configuration.voltageDivider
+    );
+    #endif
     printHTMLBottom(response);
     request->send(response);
 
@@ -451,7 +459,7 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
 
   intLEDOff();
 }
-#endif
+
 
 void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
   Log.traceln("handleDevice: %s", request->methodToString());
@@ -862,10 +870,12 @@ bool CWifiManager::updateConfigFromJson(JsonDocument jsonObj) {
     configuration.deepSleepDurationSec = jsonObj["deepSleepDurationSec"].as<unsigned short>();
   }
 
+  #ifdef TEMP_SENSOR
   if (!jsonObj["tempUnit"].isNull()) {
     Log.traceln("Setting 'tempUnit' to %s", jsonObj["tempUnit"].as<unsigned char>());
     configuration.tempUnit = jsonObj["tempUnit"].as<unsigned char>();
   }
+  #endif
 
   return true;
 }
