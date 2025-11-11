@@ -114,10 +114,16 @@ CDevice::CDevice()
   #endif
 
   #ifdef VOLTAGE_SENSOR
-  #if SEEED_XIAO_M0
+      
+  #if defined(CONFIG_IDF_TARGET_ESP32C3)
+    analogSetPinAttenuation(VOLTAGE_SENSOR_ADC_PIN, ADC_11db);
     analogReadResolution(12);
   #endif
-  pinMode(VOLTAGE_SENSOR_ADC_PIN, INPUT);
+  #if defined(SEEED_XIAO_M0)
+    analogReadResolution(12);
+  #endif
+  pinMode(VOLTAGE_SENSOR_ADC_PIN, ANALOG);
+
   #endif
 
 #if defined(ESP32)
@@ -153,7 +159,7 @@ void CDevice::loop() {
       voltageAvg += i;
     }
     voltageAvg = voltageAvg / voltageValues.size();
-  }
+  } 
   #endif
 
   #ifdef TEMP_SENSOR
@@ -300,7 +306,8 @@ float CDevice::getBaroPressure(bool *current) {
 float CDevice::getVoltage(bool *current) {
   if (current != NULL) { *current = true; }
   float v = voltageAvg / configuration.voltageDivider;
-  Log.verboseln(F("Voltage avg raw: %i volts: %F over %i samples"), voltageAvg, v, voltageValues.size());
+  Log.verboseln(F("Voltage avg raw: %u volts: %F over %u samples"), voltageAvg, v, voltageValues.size());
+  Log.verboseln(F("ADC: %u ADC_RAW: %u"), analogRead(VOLTAGE_SENSOR_ADC_PIN), analogReadRaw(VOLTAGE_SENSOR_ADC_PIN));
   return v;
 }
 uint16_t CDevice::getVoltageADC(bool *current) {

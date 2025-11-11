@@ -86,7 +86,11 @@ void EEPROM_loadConfig() {
       strcpy(configuration.mqttServer, "");
       configuration.mqttPort = 1883;
       strcpy(configuration.mqttTopic, "");
-      configuration.wifiPower = 78;
+      #ifdef CONFIG_IDF_TARGET_ESP32C3
+        configuration.wifiPower = 34; // ESP32-C3 max power 34 dBm
+      #else
+        configuration.wifiPower = 82;
+      #endif
     #endif
 
     #ifdef VOLTAGE_SENSOR
