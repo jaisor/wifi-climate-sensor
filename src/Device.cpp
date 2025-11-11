@@ -116,13 +116,15 @@ CDevice::CDevice()
   #ifdef VOLTAGE_SENSOR
       
   #if defined(CONFIG_IDF_TARGET_ESP32C3)
+    pinMode(VOLTAGE_SENSOR_ADC_PIN, ANALOG);
     analogSetPinAttenuation(VOLTAGE_SENSOR_ADC_PIN, ADC_11db);
     analogReadResolution(12);
-  #endif
-  #if defined(SEEED_XIAO_M0)
+  #elif defined(SEEED_XIAO_M0)
+    pinMode(VOLTAGE_SENSOR_ADC_PIN, ANALOG);
     analogReadResolution(12);
+  #elif defined(ESP8266)
+    pinMode(VOLTAGE_SENSOR_ADC_PIN, INPUT);
   #endif
-  pinMode(VOLTAGE_SENSOR_ADC_PIN, ANALOG);
 
   #endif
 
@@ -307,7 +309,6 @@ float CDevice::getVoltage(bool *current) {
   if (current != NULL) { *current = true; }
   float v = voltageAvg / configuration.voltageDivider;
   Log.verboseln(F("Voltage avg raw: %u volts: %F over %u samples"), voltageAvg, v, voltageValues.size());
-  Log.verboseln(F("ADC: %u ADC_RAW: %u"), analogRead(VOLTAGE_SENSOR_ADC_PIN), analogReadRaw(VOLTAGE_SENSOR_ADC_PIN));
   return v;
 }
 uint16_t CDevice::getVoltageADC(bool *current) {
