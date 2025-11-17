@@ -4,7 +4,7 @@
 
 #include "Device.h"
 
-#ifdef TEMP_SENSOR_DS18B20
+#if defined(TEMP_SENSOR_DS18B20) || defined(OLED)
 #include <Wire.h>
 #endif
 
@@ -15,24 +15,25 @@ CDevice::CDevice()
   tMillisTemp = millis();
   sensorReady = false;
 
-#ifdef OLED
-  _display = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, -1);
-  if(!_display->begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ID)) {
-      Log.errorln("SSD1306 OLED initialiation failed with ID %x", OLED_I2C_ID);
-      while (1);
-  }
-  _display->clearDisplay();
-  _display->setTextColor(WHITE);
-#endif
-
   #ifdef CONFIG_IDF_TARGET_ESP32C3
     if (configuration.tempSensor!=TEMP_SENSOR_DS18B20) {
       // ESP32C3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
-      if (Wire.begin(GPIO_NUM_7, GPIO_NUM_6)) {
-        Log.errorln(F("ESP32C3 I2C Wire initialization failed on pins SDA:%d, SCL:%d"), GPIO_NUM_7, GPIO_NUM_6);
+      if (Wire.begin(GPIO_NUM_5, GPIO_NUM_6)) {
+        Log.errorln(F("ESP32C3 I2C Wire initialization failed on pins SDA:%d, SCL:%d"), GPIO_NUM_5, GPIO_NUM_6);
       };
       delay(1000);
     }
+  #endif
+
+  #ifdef OLED
+    _display = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, -1);
+    if(!_display->begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ID)) {
+        Log.errorln("SSD1306 OLED initialiation failed with ID %x", OLED_I2C_ID);
+        while (1);
+    }
+    _display->clearDisplay();
+    _display->setTextColor(WHITE);
+    _display->setTextSize(0);
   #endif
 
   tLastReading = 0;
@@ -267,13 +268,14 @@ void CDevice::loop() {
   char st[256];
   
   _display->setTextSize(0);
-  _display->setCursor(0,17);
+  _display->setCursor(0,10);
+  _display->printf("test");
   _display->setTextSize(1);  
-  float t = getTemperature(NULL);
-  snprintf(st, 256, "Temperature: %0.1f%s\n", configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F");
-  _display->print(st);
-  snprintf(st, 256, "Humidity: %0.1f%%", getHumidity(NULL));
-  _display->print(st);
+  //float t = getTemperature(NULL);
+  //snprintf(st, 256, "Temperature: %0.1f%s\n", configuration.tempUnit == TEMP_UNIT_CELSIUS ? t : t * 1.8 + 32, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F");
+  //_display->print(st);
+  //snprintf(st, 256, "Humidity: %0.1f%%", getHumidity(NULL));
+  //_display->print(st);
 
   #endif
 

@@ -6,7 +6,7 @@
 #include <StreamUtils.h>
 
 //#define DEBUG_MOCK_HP
-#define DISABLE_LOGGING
+//#define DISABLE_LOGGING
 #ifndef DISABLE_LOGGING
   #define LOG_LEVEL LOG_LEVEL_INFO
 #endif
@@ -85,10 +85,10 @@
   #endif
 #endif
 
-//#define OLED
+#define OLED
 #ifdef OLED
-  #define OLED_SCREEN_WIDTH 128 // OLED display width, in pixels
-  #define OLED_SCREEN_HEIGHT 32 // OLED display height, in pixel
+  #define OLED_SCREEN_WIDTH 72 // OLED display width, in pixels
+  #define OLED_SCREEN_HEIGHT 40 // OLED display height, in pixel
   #define OLED_I2C_ID  0x3C
 #endif
 
