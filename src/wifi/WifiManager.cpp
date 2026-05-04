@@ -131,17 +131,17 @@ void CWifiManager::listen() {
   status = WF_LISTENING;
 
   // Web
-  server->on("/", std::bind(&CWifiManager::handleRoot, this, std::placeholders::_1));
-  server->on("/style.css", HTTP_GET, std::bind(&CWifiManager::handleStyleCSS, this, std::placeholders::_1));
+  server->on("/", [this](AsyncWebServerRequest *r){ handleRoot(r); });
+  server->on("/style.css", HTTP_GET, [this](AsyncWebServerRequest *r){ handleStyleCSS(r); });
   server->on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){ request->send(404); });
   //
-  server->on("/wifi", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleWifi, this, std::placeholders::_1));
-  server->on("/sensor", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleSensor, this, std::placeholders::_1));
-  server->on("/device", HTTP_GET | HTTP_POST, std::bind(&CWifiManager::handleDevice, this, std::placeholders::_1));
+  server->on("/wifi", HTTP_GET | HTTP_POST, [this](AsyncWebServerRequest *r){ handleWifi(r); });
+  server->on("/sensor", HTTP_GET | HTTP_POST, [this](AsyncWebServerRequest *r){ handleSensor(r); });
+  server->on("/device", HTTP_GET | HTTP_POST, [this](AsyncWebServerRequest *r){ handleDevice(r); });
   //
-  server->on("/factory_reset", HTTP_POST, std::bind(&CWifiManager::handleFactoryReset, this, std::placeholders::_1));
-  server->on("/reboot", HTTP_POST, std::bind(&CWifiManager::handleReboot, this, std::placeholders::_1));
-  server->on("/mqtt_reconnect", HTTP_POST, std::bind(&CWifiManager::handleFixMQTT, this, std::placeholders::_1));
+  server->on("/factory_reset", HTTP_POST, [this](AsyncWebServerRequest *r){ handleFactoryReset(r); });
+  server->on("/reboot", HTTP_POST, [this](AsyncWebServerRequest *r){ handleReboot(r); });
+  server->on("/mqtt_reconnect", HTTP_POST, [this](AsyncWebServerRequest *r){ handleFixMQTT(r); });
 #ifdef WEB_LOGGING
   server->on("/log", HTTP_GET, [](AsyncWebServerRequest *request){ 
     Log.traceln("handleLog");
@@ -152,7 +152,7 @@ void CWifiManager::listen() {
     intLEDOff();
   });
 #endif
-  server->on("/api", HTTP_GET, std::bind(&CWifiManager::handleRestAPI_HP, this, std::placeholders::_1));
+  server->on("/api", HTTP_GET, [this](AsyncWebServerRequest *r){ handleRestAPI_HP(r); });
   AsyncCallbackJsonWebHandler* handler = new AsyncCallbackJsonWebHandler("/api", [this](AsyncWebServerRequest *request, JsonVariant &json) {
     bool success = this->updateConfigFromJson(json.as<JsonObject>());
     if (success) {
@@ -899,6 +899,11 @@ bool CWifiManager::updateConfigFromJson(JsonDocument jsonObj) {
   if (!jsonObj["deepSleepDurationSec"].isNull()) {
     Log.traceln("Setting 'deepSleepDurationSec' to %s", jsonObj["deepSleepDurationSec"].as<unsigned short>());
     configuration.deepSleepDurationSec = jsonObj["deepSleepDurationSec"].as<unsigned short>();
+  }
+
+  if (!jsonObj["ledEnabled"].isNull()) {
+    Log.traceln("Setting 'ledEnabled' to %s", jsonObj["ledEnabled"].as<bool>() ? "true" : "false");
+    configuration.ledEnabled = jsonObj["ledEnabled"].as<bool>();
   }
 
   #ifdef TEMP_SENSOR
