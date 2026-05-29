@@ -71,6 +71,8 @@ private:
   bool updateSensorJson();
 
   void mqttCallback(char *topic, uint8_t *payload, unsigned int);
+  void publishHADiscovery();
+  void performOTAUpdate(const String& url);
   bool ensureMQTTConnected();
 
 #ifdef OLED

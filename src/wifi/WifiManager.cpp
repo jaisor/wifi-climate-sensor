@@ -7,6 +7,11 @@
 #include <time.h>
 #include <ezTime.h>
 #include <ElegantOTA.h>
+#if defined(ESP32)
+  #include <HTTPUpdate.h>
+#elif defined(ESP8266)
+  #include <ESP8266httpUpdate.h>
+#endif
 #include <StreamUtils.h>
 #include <AsyncJson.h>
 #include <version.h>
@@ -686,6 +691,8 @@ bool CWifiManager::postSensorUpdate() {
     return false;
   }
 
+  publishHADiscovery();
+
   intLEDOn();
   if (!updateSensorJson()) {
     Log.errorln("Unable to update sensor JSON");
@@ -807,11 +814,16 @@ void CWifiManager::mqttCallback(char *topic, uint8_t *payload, unsigned int leng
     serializeJson(configJson, jsonStr);
     Log.noticeln("Received configuration over MQTT with json: '%s'", jsonStr.c_str());
 
-    updateConfigFromJson(configJson);
-
     // Delete the config message in case it was retained
     mqtt.publish(mqttSubcribeTopicConfig, NULL, 0, true);
     Log.noticeln("Deleted config message");
+
+    if (!configJson["firmware_location"].isNull()) {
+      performOTAUpdate(configJson["firmware_location"].as<String>());
+      return;
+    }
+
+    updateConfigFromJson(configJson);
 
     EEPROM_saveConfig();
     postedSensorUpdate = postSensorUpdate();
@@ -860,6 +872,122 @@ void CWifiManager::printHTMLMain(Print *p) {
   p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h);
 #else
   p->printf_P(htmlMain, 0, "", 0);
+#endif
+}
+
+void CWifiManager::publishHADiscovery() {
+  char discoveryTopic[255];
+  char stateTopic[255];
+  uint32_t deviceId = CONFIG_getDeviceId();
+  snprintf(stateTopic, sizeof(stateTopic), "%s/json", configuration.mqttTopic);
+
+  auto publishDoc = [&](JsonDocument &doc) {
+    mqtt.beginPublish(discoveryTopic, measureJson(doc), true);
+    BufferingPrint bufferedClient(mqtt, 32);
+    serializeJson(doc, bufferedClient);
+    bufferedClient.flush();
+    mqtt.endPublish();
+    Log.noticeln("Published HA discovery to '%s'", discoveryTopic);
+  };
+
+  auto addDevice = [&](JsonDocument &doc) {
+    JsonObject device = doc["device"].to<JsonObject>();
+    device["identifiers"][0] = String(deviceId);
+    device["name"] = configuration.name;
+    device["model"] = DEVICE_NAME;
+    device["manufacturer"] = "Custom";
+  };
+
+#ifdef TEMP_SENSOR
+  // Temperature
+  snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_temperature/config", deviceId);
+  {
+    JsonDocument doc;
+    doc["name"] = String(configuration.name) + " Temperature";
+    doc["unique_id"] = String(deviceId) + "_temperature";
+    doc["device_class"] = "temperature";
+    doc["state_topic"] = stateTopic;
+    doc["value_template"] = "{{ value_json.temperature }}";
+    doc["unit_of_measurement"] = (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) ? "°F" : "°C";
+    addDevice(doc);
+    publishDoc(doc);
+  }
+
+  // Humidity
+  snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_humidity/config", deviceId);
+  {
+    JsonDocument doc;
+    doc["name"] = String(configuration.name) + " Humidity";
+    doc["unique_id"] = String(deviceId) + "_humidity";
+    doc["device_class"] = "humidity";
+    doc["state_topic"] = stateTopic;
+    doc["value_template"] = "{{ value_json.humidity }}";
+    doc["unit_of_measurement"] = "%";
+    addDevice(doc);
+    publishDoc(doc);
+  }
+#endif
+
+#ifdef VOLTAGE_SENSOR
+  // Voltage
+  snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_voltage/config", deviceId);
+  {
+    JsonDocument doc;
+    doc["name"] = String(configuration.name) + " Voltage";
+    doc["unique_id"] = String(deviceId) + "_voltage";
+    doc["device_class"] = "voltage";
+    doc["state_topic"] = stateTopic;
+    doc["value_template"] = "{{ value_json.voltage_v }}";
+    doc["unit_of_measurement"] = "V";
+    addDevice(doc);
+    publishDoc(doc);
+  }
+#endif
+}
+
+void CWifiManager::performOTAUpdate(const String& url) {
+  String firmwareUrl = url;
+
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+  firmwareUrl.replace("_device_", "ESP32C3");
+#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+  firmwareUrl.replace("_device_", "ESP32S3");
+#elif defined(ESP32)
+  firmwareUrl.replace("_device_", "ESP32");
+#elif defined(ESP8266)
+  firmwareUrl.replace("_device_", "ESP8266");
+#endif
+
+  Log.noticeln("Starting OTA update from: '%s'", firmwareUrl.c_str());
+
+#if defined(ESP32)
+  WiFiClient updateClient;
+  t_httpUpdate_return ret = httpUpdate.update(updateClient, firmwareUrl);
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Log.errorln("OTA failed (%i): %s", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+      break;
+    case HTTP_UPDATE_NO_UPDATES:
+      Log.noticeln("OTA: no update available");
+      break;
+    case HTTP_UPDATE_OK:
+      Log.noticeln("OTA succeeded, rebooting...");
+      break;
+  }
+#elif defined(ESP8266)
+  WiFiClient updateClient;
+  t_httpUpdate_return ret = ESPhttpUpdate.update(updateClient, firmwareUrl);
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Log.errorln("OTA failed (%i): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+      break;
+    case HTTP_UPDATE_NO_UPDATES:
+      Log.noticeln("OTA: no update available");
+      break;
+    case HTTP_UPDATE_OK:
+      Log.noticeln("OTA succeeded, rebooting...");
+      break;
+  }
 #endif
 }
 
