@@ -741,7 +741,18 @@ bool CWifiManager::updateSensorJson() {
     Log.warningln("Sensor update asked when sensor is not ready");
     return false;
   }
-  
+
+  sensorJson["temp_sensor_type"] = configuration.tempSensor;
+  const char* tempSensorName = "unknown";
+  switch (configuration.tempSensor) {
+    case TEMP_SENSOR_DS18B20: tempSensorName = "DS18B20"; break;
+    case TEMP_SENSOR_BME280:  tempSensorName = "BME280";  break;
+    case TEMP_SENSOR_DHT22:   tempSensorName = "DHT22";   break;
+    case TEMP_SENSOR_AHT20:   tempSensorName = "AHT20";   break;
+    default:                  tempSensorName = "none";    break;
+  }
+  sensorJson["temp_sensor_name"] = tempSensorName;
+
   bool current;
   float t = sensorProvider->getTemperature(&current);
   if (current) {

@@ -16,6 +16,8 @@ Supported features:
 
 ## Initial boot / reset
 
+Compile for your select ESP architecture and flash over USB.
+
 On first boot the device creates a self-hosted WiFi access point (AP) with SSID starting with `ESP8266CLSEN` or `ESP32CLSEN` and WPA2 password `password123`
 In self-hosted AP mode, the device gives itself `192.168.4.1` IP address.
 
@@ -94,10 +96,7 @@ The substring `_device_` in the URL is replaced with the target architecture bef
 
 So `firmware_device_.bin` becomes e.g. `firmware_ESP32C3_.bin`. The device reboots automatically on a successful update.
 
-# Programming the ESP8266
-
-Compile and upload the project using USB. After the resistors are removed (see below), future updates will have to be made using OTA. 
-Access to OTA is at `/update` path at the device's IP. See Initial boot below on how to connect to the self-hosted AP.
+The ESP can also be upadted over web OTA at `/update` after the device IP.
 
 # Schematic, PCB and assembly
 
