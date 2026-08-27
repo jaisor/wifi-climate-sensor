@@ -8,6 +8,10 @@ configuration_t configuration;
   StringPrint logStream;
 #endif
 
+// NOTE: these used to wrap EEPROM.commit() in taskENTER_CRITICAL/taskEXIT_CRITICAL. The
+// spinlock was a local, so it never excluded anything, but disabling interrupts across an
+// NVS flash write (and across logging) tripped the interrupt watchdog on the dual core
+// parts - "Interrupt wdt timeout on CPU1" during boot. The EEPROM calls are safe as-is.
 uint8_t EEPROM_initAndCheckFactoryReset() {
   Log.noticeln("Configuration size: %i", sizeof(configuration_t));
   
@@ -17,50 +21,23 @@ uint8_t EEPROM_initAndCheckFactoryReset() {
   Log.noticeln("Factory reset counter: %i", resetCounter);
   Log.noticeln("EEPROM length: %i", EEPROM.length());
 
-  #if defined(ESP32)
-  portMUX_TYPE mx = portMUX_INITIALIZER_UNLOCKED;
-  taskENTER_CRITICAL(&mx);
-  #endif
-
   // Bump reset counter
   EEPROM.write(EEPROM_FACTORY_RESET, resetCounter + 1);
   EEPROM.commit();
-
-  #if defined(ESP32)
-  taskEXIT_CRITICAL(&mx);
-  #endif
 
   return resetCounter;
 }
 
 void EEPROM_clearFactoryReset() {
-  #if defined(ESP32)
-  portMUX_TYPE mx = portMUX_INITIALIZER_UNLOCKED;
-  taskENTER_CRITICAL(&mx);
-  #endif
-  
   EEPROM.write(EEPROM_FACTORY_RESET, 0);
   EEPROM.commit();
-
-  #if defined(ESP32)
-  taskEXIT_CRITICAL(&mx);
-  #endif
 }
 
 void EEPROM_saveConfig() {
-  #if defined(ESP32)
-  portMUX_TYPE mx = portMUX_INITIALIZER_UNLOCKED;
-  taskENTER_CRITICAL(&mx);
-  #endif
-  
   Log.infoln("Saving configuration to EEPROM");
   EEPROM.put(EEPROM_CONFIGURATION_START, configuration);
   Log.verboseln("Committing EEPROM");
   EEPROM.commit();
-
-  #if defined(ESP32)
-  taskEXIT_CRITICAL(&mx);
-  #endif
 }
 
 void EEPROM_loadConfig() {
