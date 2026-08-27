@@ -104,6 +104,12 @@ const char htmlSensor[] PROGMEM = R"=====(
       <h3>Sensor Settings</h3>
       <form method='POST' action='sensor' enctype='application/x-www-form-urlencoded' delay='10000'>
         <fieldset>
+          <legend><strong>🌡️ Environment Sensor</strong></legend>
+          <label>
+            Detected
+            <kbd>%s</kbd>
+          </label>
+          <br/>
           <label>
             Sensor type
             <select name='tempSensor' id='tempSensor'>
@@ -163,10 +169,14 @@ const char htmlSensor[] PROGMEM = R"=====(
               </tbody>
             </table>
           </label>
-          <br/>
+        </fieldset>
+        <fieldset>
+          <legend><strong>⚡ Power Sensor</strong></legend>
+          %s
           <label>
             Voltage sensor divider <kbd>%0.2fV</kbd> / <kbd>%i ADC</kbd>
             <input type='text' id='voltageDivider' name='voltageDivider' value='%0.2f'>
+            <sub><small>scales the ADC reading, independent of any I2C power sensor</small></sub>
           </label>
           </br>
         </fieldset>
@@ -178,9 +188,12 @@ const char htmlSensor[] PROGMEM = R"=====(
       <h3>Sensor Settings</h3>
       <form method='POST' action='sensor' enctype='application/x-www-form-urlencoded' delay='10000'>
         <fieldset>
+          <legend><strong>⚡ Power Sensor</strong></legend>
+          %s
           <label>
             Voltage sensor divider <kbd>%0.2fV</kbd> / <kbd>%i ADC</kbd>
             <input type='text' id='voltageDivider' name='voltageDivider' value='%0.2f'>
+            <sub><small>scales the ADC reading, independent of any I2C power sensor</small></sub>
           </label>
           </br>
         </fieldset>
@@ -242,6 +255,21 @@ const char htmlMain[] PROGMEM = R"=====(
         <p>
           Graph goes here
         </p>
+      </article>
+      %s
+)=====";
+
+// Rendered into htmlMain only when a power sensor is actually detected
+const char htmlMainPower[] PROGMEM = R"=====(
+      <article>
+        <header class="grid">
+          <h1>⚡ Power</h1>
+          <h1 style="text-align: right;"><kbd>%0.3fV</kbd></h1>
+        </header>
+        <div class="grid">
+          <div><small>Current</small> <kbd>%0.1f mA</kbd></div>
+          <div style="text-align: right;"><small>Power</small> <kbd>%0.1f mW</kbd></div>
+        </div>
       </article>
 )=====";
 

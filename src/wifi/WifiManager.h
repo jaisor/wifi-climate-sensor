@@ -63,6 +63,8 @@ private:
   void printHTMLTop(Print *p);
   void printHTMLBottom(Print *p);
   void printHTMLMain(Print *p);
+  void printEnvSensorLabel(char *buf, size_t len);
+  void printPowerSensorLabel(char *buf, size_t len);
 
   bool postSensorUpdate();
   bool isApMode();

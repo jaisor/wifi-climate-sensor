@@ -68,12 +68,32 @@
   #endif
 #endif
 
+// I2C bus shared by the BME280, AHT20, INA219 and OLED peripherals.
+// Only targets that need non-default pins are listed; the rest use the core defaults.
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+  // ESP32C3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
+  #define I2C_SDA_PIN GPIO_NUM_7
+  #define I2C_SCL_PIN GPIO_NUM_6
+#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+  #define I2C_SDA_PIN GPIO_NUM_8
+  #define I2C_SCL_PIN GPIO_NUM_9
+#endif
+
+#define CURRENT_SENSOR  // INA219 high side voltage/current monitor on I2C, auto-detected at boot
+#ifdef CURRENT_SENSOR
+  #define INA219_I2C_ID 0x40
+  #define CURRENT_SENSOR_DELAY_MS 500 // Minimum interval between INA219 readings
+#endif
+
 #define TEMP_SENSOR
 #ifdef TEMP_SENSOR
   #define TEMP_UNIT_CELSIUS 0
   #define TEMP_UNIT_FAHRENHEIT 1
   #define BME280_SEALEVELPRESSURE_HPA (1013.25)
   #define BME280_I2C_ID 0x76
+  #define BME280_I2C_ID_ALT 0x77 // Adafruit and some other breakouts strap the address line high
+  #define AHT20_I2C_ID 0x38
+  #define TEMP_SENSOR_AUTODETECT // Probe the I2C bus for a BME280/AHT20 and select it automatically
   #if defined(CONFIG_IDF_TARGET_ESP32C3)
     #define TEMP_SENSOR_PIN GPIO_NUM_6
   #elif defined(ESP32)

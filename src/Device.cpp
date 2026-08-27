@@ -4,9 +4,13 @@
 
 #include "Device.h"
 
-#ifdef TEMP_SENSOR_DS18B20
 #include <Wire.h>
-#endif
+
+// A device ACKs its address when present, which is enough to tell a BME280 from an AHT20
+static bool i2cDevicePresent(uint8_t address) {
+  Wire.beginTransmission(address);
+  return Wire.endTransmission() == 0;
+}
 
 CDevice::CDevice()
 :oneWire(NULL), ds18b20(NULL), bme280(NULL), dht(NULL), aht(NULL) {
@@ -25,17 +29,52 @@ CDevice::CDevice()
   _display->setTextColor(WHITE);
 #endif
 
-  #ifdef CONFIG_IDF_TARGET_ESP32C3
-    if (configuration.tempSensor!=TEMP_SENSOR_DS18B20) {
-      // ESP32C3 uses GPIO 6,7 for SDA,SCL - see https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
-      if (Wire.begin(GPIO_NUM_7, GPIO_NUM_6)) {
-        Log.errorln(F("ESP32C3 I2C Wire initialization failed on pins SDA:%d, SCL:%d"), GPIO_NUM_7, GPIO_NUM_6);
-      };
-      delay(1000);
-    }
+  i2cReady = false;
+  tempSensorAddress = 0;
+
+  // On some targets the DS18B20 data pin doubles as an I2C line, so leave the bus alone when it is selected
+  bool i2cPinConflict = false;
+  #if defined(TEMP_SENSOR) && defined(I2C_SDA_PIN) && defined(I2C_SCL_PIN)
+    i2cPinConflict = configuration.tempSensor == TEMP_SENSOR_DS18B20
+      && (TEMP_SENSOR_PIN == I2C_SDA_PIN || TEMP_SENSOR_PIN == I2C_SCL_PIN);
   #endif
 
+  if (!i2cPinConflict) {
+    #if defined(I2C_SDA_PIN) && defined(I2C_SCL_PIN)
+      i2cReady = Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+      if (!i2cReady) {
+        Log.errorln(F("I2C Wire initialization failed on pins SDA:%d, SCL:%d"), I2C_SDA_PIN, I2C_SCL_PIN);
+      }
+    #else
+      Wire.begin();
+      i2cReady = true;
+    #endif
+    delay(1000);
+  } else {
+    Log.noticeln(F("I2C bus not started, DS18B20 shares a pin with it"));
+  }
+
   tLastReading = 0;
+
+  #if defined(TEMP_SENSOR) && defined(TEMP_SENSOR_AUTODETECT)
+  // Adopt whatever climate sensor is actually on the bus when nothing is configured yet,
+  // or when the configured I2C sensor does not answer (the board was swapped). An explicit
+  // DS18B20/DHT22 choice is left alone, since those are not on I2C at all.
+  if (i2cReady) {
+    tempSensorType detected = detectI2CTempSensor();
+    bool configuredIsI2C = configuration.tempSensor == TEMP_SENSOR_BME280
+      || configuration.tempSensor == TEMP_SENSOR_AHT20;
+
+    if (detected != TEMP_SENSOR_UNSUPPORTED
+      && detected != configuration.tempSensor
+      && (configuration.tempSensor == TEMP_SENSOR_UNSUPPORTED || configuredIsI2C)) {
+      Log.noticeln(F("Autodetected climate sensor %s at I2C 0x%x, replacing configured type %u"),
+        detected == TEMP_SENSOR_BME280 ? "BME280" : "AHT20", tempSensorAddress, configuration.tempSensor);
+      configuration.tempSensor = detected;
+      EEPROM_saveConfig();
+    }
+  }
+  #endif
 
   #ifdef TEMP_SENSOR
   switch (configuration.tempSensor) {
@@ -65,9 +104,12 @@ CDevice::CDevice()
     } break;
     
     case TEMP_SENSOR_BME280: {
+      if (tempSensorAddress == 0) {
+        tempSensorAddress = i2cDevicePresent(BME280_I2C_ID_ALT) ? BME280_I2C_ID_ALT : BME280_I2C_ID;
+      }
       bme280 = new Adafruit_BME280();
-      if (!bme280->begin(BME280_I2C_ID)) {
-        Log.errorln(F("BME280 sensor initialization failed with ID %x"), BME280_I2C_ID);
+      if (!bme280->begin(tempSensorAddress)) {
+        Log.errorln(F("BME280 sensor initialization failed with ID %x"), tempSensorAddress);
         sensorReady = false;
       } else {
         sensorReady = true;
@@ -94,6 +136,7 @@ CDevice::CDevice()
     } break;
 
     case TEMP_SENSOR_AHT20: {
+      tempSensorAddress = AHT20_I2C_ID;
       aht = new Adafruit_AHTX0();
       if (!aht->begin()) {
         Log.errorln("Failed to initialize AHT sensor, check wiring");
@@ -111,6 +154,22 @@ CDevice::CDevice()
       Log.errorln(F("Unsupported temperature sensor: %u"), configuration.tempSensor);
       break;
   }
+  #endif
+
+  #ifdef CURRENT_SENSOR
+  // Skipped when the bus never came up, so the library cannot quietly re-init it on default pins
+  ina219 = i2cReady ? new Adafruit_INA219(INA219_I2C_ID) : NULL;
+  currentSensorReady = ina219 != NULL && ina219->begin();
+  if (currentSensorReady) {
+    Log.noticeln(F("INA219 initialized with ID %x"), INA219_I2C_ID);
+  } else {
+    Log.warningln(F("INA219 not found with ID %x, current sensing disabled"), INA219_I2C_ID);
+    delete ina219;
+    ina219 = NULL;
+  }
+  tMillisCurrent = 0;
+  tLastCurrentReading = 0;
+  loadVoltage = loadCurrent_mA = loadPower_mW = 0;
   #endif
 
   #ifdef VOLTAGE_SENSOR
@@ -136,11 +195,39 @@ CDevice::CDevice()
   Log.infoln(F("Device initialized"));
 }
 
+#if defined(TEMP_SENSOR) && defined(TEMP_SENSOR_AUTODETECT)
+// Probes the addresses the two supported I2C climate sensors use and records which one
+// answered, so the BME280 can later be opened on whichever of its two addresses is strapped.
+tempSensorType CDevice::detectI2CTempSensor() {
+  const uint8_t bmeAddresses[] = { BME280_I2C_ID, BME280_I2C_ID_ALT };
+  for (uint8_t i = 0; i < sizeof(bmeAddresses); i++) {
+    if (i2cDevicePresent(bmeAddresses[i])) {
+      // 0x76/0x77 are shared with the BMP280, which Adafruit_BME280::begin() rejects by chip id
+      tempSensorAddress = bmeAddresses[i];
+      Log.noticeln(F("Found BME280 candidate at I2C 0x%x"), tempSensorAddress);
+      return TEMP_SENSOR_BME280;
+    }
+  }
+
+  if (i2cDevicePresent(AHT20_I2C_ID)) {
+    tempSensorAddress = AHT20_I2C_ID;
+    Log.noticeln(F("Found AHT20 at I2C 0x%x"), tempSensorAddress);
+    return TEMP_SENSOR_AHT20;
+  }
+
+  Log.noticeln(F("No I2C climate sensor found"));
+  return TEMP_SENSOR_UNSUPPORTED;
+}
+#endif
+
 CDevice::~CDevice() { 
   delete ds18b20;
   delete bme280;
   delete dht;
   delete aht;
+#ifdef CURRENT_SENSOR
+  delete ina219;
+#endif
 #ifdef OLED
   delete _display;
 #endif
@@ -162,6 +249,21 @@ void CDevice::loop() {
     }
     voltageAvg = voltageAvg / voltageValues.size();
   } 
+  #endif
+
+  #ifdef CURRENT_SENSOR
+  if (ina219 != NULL && millis() - tMillisCurrent > CURRENT_SENSOR_DELAY_MS) {
+    tMillisCurrent = millis();
+    // Bus voltage is measured on the load side of the shunt, so add the shunt drop back in
+    float shunt_mV = ina219->getShuntVoltage_mV();
+    float bus_V = ina219->getBusVoltage_V();
+    loadVoltage = bus_V + shunt_mV / 1000.0f;
+    loadCurrent_mA = ina219->getCurrent_mA();
+    loadPower_mW = ina219->getPower_mW();
+    tLastCurrentReading = millis();
+    Log.traceln(F("INA219 bus: %FV shunt: %FmV load: %FV current: %FmA power: %FmW"),
+      bus_V, shunt_mV, loadVoltage, loadCurrent_mA, loadPower_mW);
+  }
   #endif
 
   #ifdef TEMP_SENSOR
@@ -317,6 +419,29 @@ uint16_t CDevice::getVoltageADC(bool *current) {
 }
 #endif
 
+#ifdef CURRENT_SENSOR
+float CDevice::getLoadVoltage(bool *current) {
+  if (current != NULL) {
+    *current = currentSensorReady && millis() - tLastCurrentReading < STALE_READING_AGE_MS;
+  }
+  return loadVoltage;
+}
+
+float CDevice::getLoadCurrent(bool *current) {
+  if (current != NULL) {
+    *current = currentSensorReady && millis() - tLastCurrentReading < STALE_READING_AGE_MS;
+  }
+  return loadCurrent_mA;
+}
+
+float CDevice::getLoadPower(bool *current) {
+  if (current != NULL) {
+    *current = currentSensorReady && millis() - tLastCurrentReading < STALE_READING_AGE_MS;
+  }
+  return loadPower_mW;
+}
+#endif
+
 JsonDocument& CDevice::getDeviceSettings() {
 
   jsonDeviceSettings["name"] = configuration.name;
@@ -344,6 +469,12 @@ JsonDocument& CDevice::getDeviceSettings() {
   jsonDeviceSettings["hCorrection"][1]["measured"] = configuration.hCorrection[1].measured;
 
   jsonDeviceSettings["tempUnit"] = configuration.tempUnit;
+  jsonDeviceSettings["tempSensorAddress"] = tempSensorAddress;
+  #endif
+
+  #ifdef CURRENT_SENSOR
+  jsonDeviceSettings["currentSensorReady"] = currentSensorReady;
+  jsonDeviceSettings["currentSensorStr"] = currentSensorReady ? "INA219" : "-";
   #endif
 
   jsonDeviceSettings["ledEnabled"] = configuration.ledEnabled;
