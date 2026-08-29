@@ -13,6 +13,10 @@
 #include <DHT_U.h>
 #include <Adafruit_AHTX0.h>
 
+#ifdef CURRENT_SENSOR
+  #include <Adafruit_INA219.h>
+#endif
+
 #ifdef OLED
   #include <Adafruit_SSD1306.h>
   #include <Adafruit_GFX.h>
@@ -28,6 +32,10 @@ public:
   ~CDevice();
   void loop();
 
+  #ifdef TEMP_SENSOR_AUTODETECT
+  tempSensorType detectI2CTempSensor();
+  #endif
+
   virtual bool isSensorReady() { return sensorReady; };
   
   #ifdef TEMP_SENSOR
@@ -38,15 +46,25 @@ public:
   virtual float getVoltage(bool *current);
   virtual uint16_t getVoltageADC(bool *current);
 
+  #ifdef CURRENT_SENSOR
+  virtual bool isCurrentSensorReady() { return currentSensorReady; };
+  virtual float getLoadVoltage(bool *current);
+  virtual float getLoadCurrent(bool *current);
+  virtual float getLoadPower(bool *current);
+  #endif
+
   #ifdef OLED
   Adafruit_SSD1306* display() const { return _display; };
   Adafruit_SSD1306 *_display;
   #endif
 
+  virtual uint8_t getTempSensorAddress() { return tempSensorAddress; };
+
   virtual JsonDocument& getDeviceSettings();
   virtual bool setDeviceSettings(JsonDocument ac);
 
 private:
+  bool i2cReady;
   unsigned long tMillisUp;
 
   unsigned long tMillisTemp;
@@ -62,10 +80,18 @@ private:
   DS18B20 *ds18b20;
   //TEMP_SENSOR_BME280
   Adafruit_BME280 *bme280;
+  uint8_t tempSensorAddress; // I2C address the climate sensor answered on, 0 for the 1-Wire/digital ones
   // TEMP_SENSOR_DHT
   DHT_Unified *dht;
   // TEMP_SENSOR_AHT
   Adafruit_AHTX0 *aht;
+
+  #ifdef CURRENT_SENSOR
+  Adafruit_INA219 *ina219;
+  bool currentSensorReady;
+  unsigned long tMillisCurrent, tLastCurrentReading;
+  float loadVoltage, loadCurrent_mA, loadPower_mW;
+  #endif
 
   unsigned long minDelayMs;
   #ifdef VOLTAGE_SENSOR

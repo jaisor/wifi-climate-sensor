@@ -467,22 +467,32 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
       t = t * 1.8 + 32;
     }
 
-    AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8", 8192);
+    char envSensor[192];
+    printEnvSensorLabel(envSensor, sizeof(envSensor));
+
+    char pwrSensor[256];
+    printPowerSensorLabel(pwrSensor, sizeof(pwrSensor));
+
+    AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8", 10240);
     printHTMLTop(response);
-    response->printf_P(htmlSensor, tempSensor, tempUnit,
+    response->printf_P(htmlSensor, envSensor, tempSensor, tempUnit,
       t, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "F" : "" )),
       configuration.tCorrection[0].measured, configuration.tCorrection[0].actual,
       configuration.tCorrection[1].measured, configuration.tCorrection[1].actual,
       sensorProvider->getHumidity(NULL),
       configuration.hCorrection[0].measured, configuration.hCorrection[0].actual,
       configuration.hCorrection[1].measured, configuration.hCorrection[1].actual,
+      pwrSensor,
       sensorProvider->getVoltage(NULL), sensorProvider->getVoltageADC(NULL),
       configuration.voltageDivider
     );
     #else
-    AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8", 4096);
+    char pwrSensor[256];
+    printPowerSensorLabel(pwrSensor, sizeof(pwrSensor));
+
+    AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8", 6144);
     printHTMLTop(response);
-    response->printf_P(htmlSensor, 
+    response->printf_P(htmlSensor, pwrSensor,
       sensorProvider->getVoltage(NULL), sensorProvider->getVoltageADC(NULL),
       configuration.voltageDivider
     );
@@ -532,6 +542,7 @@ void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
   } else {
 
     uint16_t sleepMin = (uint16_t)(configuration.deepSleepDurationSec / 60);
+
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8", 6144);
     printHTMLTop(response);
     response->printf_P(htmlDevice, configuration.ledEnabled ? "checked" : "",
@@ -691,14 +702,14 @@ bool CWifiManager::postSensorUpdate() {
     return false;
   }
 
-  publishHADiscovery();
-
   intLEDOn();
   if (!updateSensorJson()) {
     Log.errorln("Unable to update sensor JSON");
     intLEDOff();
     return false;
   }
+
+  publishHADiscovery();
 
   // sensor Json
   char topic[255];
@@ -736,44 +747,58 @@ bool CWifiManager::updateSensorJson() {
   sensorJson["led_enabled"] = configuration.ledEnabled;
   sensorJson["led_enabled_text"] = configuration.ledEnabled ? "yes" : "no";
 
+#ifdef CURRENT_SENSOR
+  // INA219 readings are reported separately from the ADC divider voltage above
+  bool ina219Current;
+  float ina219Voltage = sensorProvider->getLoadVoltage(&ina219Current);
+  if (ina219Current) {
+    sensorJson["ina219_voltage_v"] = ina219Voltage;
+    sensorJson["ina219_current_ma"] = sensorProvider->getLoadCurrent(NULL);
+    sensorJson["ina219_power_mw"] = sensorProvider->getLoadPower(NULL);
+  }
+#endif
+
 #if defined(TEMP_SENSOR_PIN)
+  // A missing or failed climate sensor must not suppress the whole payload: the wifi,
+  // voltage and INA219 values are still worth publishing, and on a board with no climate
+  // sensor at all they are the only values there are.
   if (!sensorProvider->isSensorReady()) {
-    Log.warningln("Sensor update asked when sensor is not ready");
-    return false;
-  }
+    Log.warningln("Climate sensor not ready, publishing without temperature and humidity");
+  } else {
 
-  sensorJson["temp_sensor_type"] = configuration.tempSensor;
-  const char* tempSensorName = "unknown";
-  switch (configuration.tempSensor) {
-    case TEMP_SENSOR_DS18B20: tempSensorName = "DS18B20"; break;
-    case TEMP_SENSOR_BME280:  tempSensorName = "BME280";  break;
-    case TEMP_SENSOR_DHT22:   tempSensorName = "DHT22";   break;
-    case TEMP_SENSOR_AHT20:   tempSensorName = "AHT20";   break;
-    default:                  tempSensorName = "none";    break;
-  }
-  sensorJson["temp_sensor_name"] = tempSensorName;
-
-  bool current;
-  float t = sensorProvider->getTemperature(&current);
-  if (current) {
-    if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
-      t = t * 1.8 + 32;
+    sensorJson["temp_sensor_type"] = configuration.tempSensor;
+    const char* tempSensorName = "unknown";
+    switch (configuration.tempSensor) {
+      case TEMP_SENSOR_DS18B20: tempSensorName = "DS18B20"; break;
+      case TEMP_SENSOR_BME280:  tempSensorName = "BME280";  break;
+      case TEMP_SENSOR_DHT22:   tempSensorName = "DHT22";   break;
+      case TEMP_SENSOR_AHT20:   tempSensorName = "AHT20";   break;
+      default:                  tempSensorName = "none";    break;
     }
-    sensorJson["temperature_uncorrected"] = t;
-    sensorJson["temperature"] = correctT(t);
-    sensorJson["temperature_current"] = current;
+    sensorJson["temp_sensor_name"] = tempSensorName;
 
-    char tunit[32];
-    snprintf(tunit, 32, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "Celsius" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "Fahrenheit" : "" )));
-    sensorJson["temperature_unit"] = tunit;
-  }
+    bool current;
+    float t = sensorProvider->getTemperature(&current);
+    if (current) {
+      if (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT) {
+        t = t * 1.8 + 32;
+      }
+      sensorJson["temperature_uncorrected"] = t;
+      sensorJson["temperature"] = correctT(t);
+      sensorJson["temperature_current"] = current;
 
-  float h = sensorProvider->getHumidity(&current);
-  if (current) {
-    sensorJson["humidity_uncorrected"] = h;
-    sensorJson["humidity"] = correctH(h);
-    sensorJson["humidit_unit"] = "percent";
-    sensorJson["humidity_current"] = current;
+      char tunit[32];
+      snprintf(tunit, 32, (configuration.tempUnit == TEMP_UNIT_CELSIUS ? "Celsius" : (configuration.tempUnit == TEMP_UNIT_FAHRENHEIT ? "Fahrenheit" : "" )));
+      sensorJson["temperature_unit"] = tunit;
+    }
+
+    float h = sensorProvider->getHumidity(&current);
+    if (current) {
+      sensorJson["humidity_uncorrected"] = h;
+      sensorJson["humidity"] = correctH(h);
+      sensorJson["humidit_unit"] = "percent";
+      sensorJson["humidity_current"] = current;
+    }
   }
 #endif
 #ifdef VOLTAGE_SENSOR
@@ -870,7 +895,66 @@ void CWifiManager::printHTMLBottom(Print *p) {
   p->printf_P(htmlBottom, VERSION, jsonStr.c_str());
 }
 
+// Name plus the pin or I2C address the sensor actually sits on, so the Sensor page
+// reflects the wiring rather than just the configured type
+void CWifiManager::printEnvSensorLabel(char *buf, size_t len) {
+#ifdef TEMP_SENSOR
+  const char *state = sensorProvider->isSensorReady() ? "✅" : "❌";
+  switch (configuration.tempSensor) {
+    case TEMP_SENSOR_DS18B20:
+      snprintf_P(buf, len, PSTR("DS18B20 <small>(1-Wire GPIO%d)</small> %s"), (int)TEMP_SENSOR_PIN, state);
+      break;
+    case TEMP_SENSOR_BME280:
+      snprintf_P(buf, len, PSTR("BME280 <small>(I2C 0x%02X)</small> %s"),
+        sensorProvider->getTempSensorAddress(), state);
+      break;
+    case TEMP_SENSOR_DHT22:
+      snprintf_P(buf, len, PSTR("DHT22 <small>(GPIO%d)</small> %s"), (int)TEMP_SENSOR_PIN, state);
+      break;
+    case TEMP_SENSOR_AHT20:
+      snprintf_P(buf, len, PSTR("AHT20 <small>(I2C 0x%02X)</small> %s"),
+        sensorProvider->getTempSensorAddress(), state);
+      break;
+    default:
+      snprintf_P(buf, len, PSTR("none <small>(no sensor selected)</small>"));
+      break;
+  }
+#else
+  snprintf_P(buf, len, PSTR("none"));
+#endif
+}
+
+void CWifiManager::printPowerSensorLabel(char *buf, size_t len) {
+  buf[0] = 0;
+#ifdef CURRENT_SENSOR
+  if (sensorProvider->isCurrentSensorReady()) {
+    snprintf_P(buf, len, PSTR(
+      "<label>Detected <kbd>INA219 <small>(I2C 0x%02X)</small> ✅</kbd></label>"
+      "<label>Reading <kbd>%0.3f V</kbd> / <kbd>%0.1f mA</kbd> / <kbd>%0.1f mW</kbd></label>"
+      "<br/>"),
+      INA219_I2C_ID,
+      sensorProvider->getLoadVoltage(NULL),
+      sensorProvider->getLoadCurrent(NULL),
+      sensorProvider->getLoadPower(NULL));
+  } else {
+    snprintf_P(buf, len, PSTR(
+      "<label>Detected <kbd>INA219 <small>(I2C 0x%02X)</small> ❌ not found</kbd></label>"
+      "<br/>"), INA219_I2C_ID);
+  }
+#endif
+}
+
 void CWifiManager::printHTMLMain(Print *p) {
+
+  char power[512] = "";
+#ifdef CURRENT_SENSOR
+  if (sensorProvider->isCurrentSensorReady()) {
+    snprintf_P(power, sizeof(power), htmlMainPower,
+      sensorProvider->getLoadVoltage(NULL),
+      sensorProvider->getLoadCurrent(NULL),
+      sensorProvider->getLoadPower(NULL));
+  }
+#endif
 
 #ifdef TEMP_SENSOR
   float t = sensorProvider->getTemperature(NULL);
@@ -880,9 +964,9 @@ void CWifiManager::printHTMLMain(Print *p) {
   t = correctT(t);
   h = correctH(h);
 
-  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h);
+  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h, power);
 #else
-  p->printf_P(htmlMain, 0, "", 0);
+  p->printf_P(htmlMain, 0, "", 0, power);
 #endif
 }
 
@@ -952,6 +1036,52 @@ void CWifiManager::publishHADiscovery() {
     doc["unit_of_measurement"] = "V";
     addDevice(doc);
     publishDoc(doc);
+  }
+#endif
+
+#ifdef CURRENT_SENSOR
+  if (sensorProvider->isCurrentSensorReady()) {
+    // INA219 voltage
+    snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_ina219_voltage/config", deviceId);
+    {
+      JsonDocument doc;
+      doc["name"] = String(configuration.name) + " INA219 Voltage";
+      doc["unique_id"] = String(deviceId) + "_ina219_voltage";
+      doc["device_class"] = "voltage";
+      doc["state_topic"] = stateTopic;
+      doc["value_template"] = "{{ value_json.ina219_voltage_v }}";
+      doc["unit_of_measurement"] = "V";
+      addDevice(doc);
+      publishDoc(doc);
+    }
+
+    // INA219 current
+    snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_ina219_current/config", deviceId);
+    {
+      JsonDocument doc;
+      doc["name"] = String(configuration.name) + " INA219 Current";
+      doc["unique_id"] = String(deviceId) + "_ina219_current";
+      doc["device_class"] = "current";
+      doc["state_topic"] = stateTopic;
+      doc["value_template"] = "{{ value_json.ina219_current_ma }}";
+      doc["unit_of_measurement"] = "mA";
+      addDevice(doc);
+      publishDoc(doc);
+    }
+
+    // INA219 power
+    snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_ina219_power/config", deviceId);
+    {
+      JsonDocument doc;
+      doc["name"] = String(configuration.name) + " INA219 Power";
+      doc["unique_id"] = String(deviceId) + "_ina219_power";
+      doc["device_class"] = "power";
+      doc["state_topic"] = stateTopic;
+      doc["value_template"] = "{{ value_json.ina219_power_mw }}";
+      doc["unit_of_measurement"] = "mW";
+      addDevice(doc);
+      publishDoc(doc);
+    }
   }
 #endif
 }

@@ -80,7 +80,17 @@
           Graph goes here
         </p>
       </article>
-      
+      <article>
+        <header class="grid">
+          <h1>⚡ Power</h1>
+          <h1 style="text-align: right;"><kbd>12.043V</kbd></h1>
+        </header>
+        <div class="grid">
+          <div><small>Current</small> <kbd>184.2 mA</kbd></div>
+          <div style="text-align: right;"><small>Power</small> <kbd>2218.3 mW</kbd></div>
+        </div>
+      </article>
+
       <h3>Device Settings</h3>
       <form method='POST' action='device' enctype='application/x-www-form-urlencoded' delay='8000'>
         <fieldset>
@@ -99,6 +109,13 @@
             Sleep interval <kbd><output id="sleepOutputId">5</output> minutes</kbd>
             <input type="range" id="deepSleepDuration" name="deepSleepDuration" value="5" min="0" max="60" step="1" oninput="sleepOutputId.value = deepSleepDuration.value"><br/>
             <sub><small><i>0 minutes</i> disables sleep, allowing web access any time</small></sub>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend><strong>🌡️ Environment Sensor</strong></legend>
+          <label>
+            Detected
+            <kbd>AHT20 <small>(I2C 0x38)</small> ✅</kbd>
           </label>
           <br/>
           Sensor correction<br/>
@@ -145,12 +162,20 @@
               </tbody>
             </table>
           </label>
+        </fieldset>
+        <fieldset>
+          <legend><strong>⚡ Power Sensor</strong></legend>
+          <label>Detected <kbd>INA219 <small>(I2C 0x40)</small> ✅</kbd></label>
+          <label>Reading <kbd>12.043 V</kbd> / <kbd>184.2 mA</kbd> / <kbd>2218.3 mW</kbd></label>
           <br/>
           <label>
-            Voltage sensor divider (currently 1.7v / 279 raw ADC value)
+            Voltage sensor divider <kbd>1.70V</kbd> / <kbd>279 ADC</kbd>
             <input type='text' id='voltageDivider' name='voltageDivider' value='162.3'>
+            <sub><small>scales the ADC reading, independent of any I2C power sensor</small></sub>
           </label>
           <br/>
+        </fieldset>
+        <fieldset>
           <label>
             Temperature units
             <select name='tempUnit' id='tempUnit'>
