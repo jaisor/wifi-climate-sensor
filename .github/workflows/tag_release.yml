@@ -5,29 +5,53 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  # The build matrix comes from default_envs in platformio.ini so a newly added
+  # board is released automatically instead of needing this file edited too.
+  environments:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment: [esp32c3, esp32s3, esp32, esp8266]
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Get Next Version
-        id: semver
-        uses: ietf-tools/semver-action@v1
-        with:
-          token: ${{ github.token }}
-          branch: main
+
+      - name: Read environments from platformio.ini
+        id: read
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import configparser, json
+          config = configparser.ConfigParser()
+          config.read('platformio.ini')
+          envs = [e.strip() for e in config['platformio']['default_envs'].split(',') if e.strip()]
+          if not envs:
+              raise SystemExit('No default_envs found in platformio.ini')
+          print('matrix=' + json.dumps(envs))
+          PY
+
+      - name: Show environments
+        run: echo "Building ${{ steps.read.outputs.matrix }} for tag ${{ github.ref_name }}"
+
+  build:
+    needs: environments
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJSON(needs.environments.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
-      
+          key: ${{ runner.os }}-pio-${{ matrix.environment }}
+          restore-keys: ${{ runner.os }}-pio-
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -35,29 +59,57 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio intelhex
 
+      # SEMVER must be exported, not just assigned: buildscript_versioning.py reads it
+      # from the environment to stamp include/version.h.
       - name: Build PlatformIO Project
-        run: SEMVER=${{ steps.semver.outputs.next }} && pio run -e ${{ matrix.environment }}
+        env:
+          SEMVER: ${{ github.ref_name }}
+        run: pio run -e ${{ matrix.environment }}
 
-      - name: Upload BIN Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Verify the tag was stamped into the firmware
+        run: |
+          grep -q '"${{ github.ref_name }}"' include/version.h \
+            || { echo "version.h was not stamped with ${{ github.ref_name }}"; cat include/version.h; exit 1; }
+          cat include/version.h
+
+      # Named for the _device_ substitution the MQTT OTA update performs, so a release
+      # asset can be fetched directly as .../releases/download/<tag>/firmware_device_.bin
+      - name: Stage release assets
+        run: |
+          arch=$(echo "${{ matrix.environment }}" | tr '[:lower:]' '[:upper:]')
+          mkdir -p dist
+          cp ".pio/build/${{ matrix.environment }}/firmware.bin" "dist/firmware_${arch}_.bin"
+          cp ".pio/build/${{ matrix.environment }}/firmware.elf" "dist/firmware_${arch}_.elf"
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.environment }}-${{ steps.semver.outputs.next }}.bin
-          path: .pio/build/${{ matrix.environment }}/firmware.bin
+          name: firmware-${{ matrix.environment }}-${{ github.ref_name }}
+          path: dist/*
           if-no-files-found: error
 
-      - name: Upload ELF Artifacts
-        uses: actions/upload-artifact@v4
+  # A single release job, so the four matrix jobs do not race to create the same
+  # release and the binaries are actually attached to it.
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          name: firmware-${{ matrix.environment }}-${{ steps.semver.outputs.next }}.elf
-          path: .pio/build/${{ matrix.environment }}/firmware.elf
-          if-no-files-found: error
-        
+          path: dist
+          merge-multiple: true
+
+      - name: List release assets
+        run: ls -l dist
+
       - name: Create Release
-        uses: ncipollo/release-action@v1.12.0
+        uses: ncipollo/release-action@v1.14.0
         with:
           allowUpdates: true
           draft: false
           makeLatest: true
-          name: ${{ steps.semver.outputs.next }}
-          body: Changelog Contents
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          artifacts: dist/*
+          generateReleaseNotes: true
           token: ${{ github.token }}

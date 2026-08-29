@@ -35,8 +35,12 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio intelhex
 
+      # SEMVER must be exported, not just assigned: buildscript_versioning.py reads it
+      # from the environment to stamp include/version.h.
       - name: Build PlatformIO Project
-        run: SEMVER=${{ steps.semver.outputs.next }} && pio run -e ${{ matrix.environment }}
+        env:
+          SEMVER: ${{ steps.semver.outputs.next }}
+        run: pio run -e ${{ matrix.environment }}
 
       - name: Upload BIN Artifacts
         uses: actions/upload-artifact@v4
