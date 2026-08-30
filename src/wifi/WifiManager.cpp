@@ -54,7 +54,10 @@ CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
   sensorJson["dev_name"] = configuration.name;
   sensorJson["version"] = VERSION;
   sensorJson["version_short"] = VERSION_SHORT;
-  
+  sensorJson["chip_model"] = CONFIG_getChipModel();
+  sensorJson["chip_revision"] = CONFIG_getChipRevision();
+  sensorJson["flash_size_bytes"] = CONFIG_getFlashChipSize();
+
   strcpy(SSID, configuration.wifiSsid);
   server = new AsyncWebServer(WEB_SERVER_PORT);
   mqtt.setClient(espClient);
@@ -176,6 +179,7 @@ void CWifiManager::listen() {
   Log.infoln("Web server listening on %s port %i", WiFi.localIP().toString().c_str(), WEB_SERVER_PORT);
   
   sensorJson["ip"] = WiFi.localIP().toString();
+  sensorJson["mac_address"] = WiFi.macAddress();
 
   // NTP
   Log.infoln("Configuring time from %s at %i (%i)", configuration.ntpServer, configuration.gmtOffset_sec, configuration.daylightOffset_sec);
@@ -545,7 +549,10 @@ void CWifiManager::handleDevice(AsyncWebServerRequest *request) {
 
     AsyncResponseStream *response = request->beginResponseStream("text/html; charset=UTF-8", 6144);
     printHTMLTop(response);
-    response->printf_P(htmlDevice, configuration.ledEnabled ? "checked" : "",
+    response->printf_P(htmlDevice,
+      CONFIG_getChipModel().c_str(), CONFIG_getChipRevision(),
+      CONFIG_getFlashChipSize() / (1024 * 1024), WiFi.macAddress().c_str(),
+      configuration.ledEnabled ? "checked" : "",
       configuration.name, sleepMin, sleepMin,
       configuration.mqttServer, configuration.mqttPort, configuration.mqttTopic);
     printHTMLBottom(response);
