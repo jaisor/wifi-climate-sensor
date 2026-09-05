@@ -22,6 +22,10 @@ bool smoothBoot;
 unsigned long tsMillisBooted;
 
 void goToSleep() {
+  #ifdef TEMP_SENSOR
+  // Last chance to save the IAQ baseline; deep sleep loses everything not in flash
+  device->persistAirQuality(true);
+  #endif
   WiFi.disconnect();
   // WiFi.forceSleepBegin((uint64_t)configuration.deepSleepDurationSec * 1e6);
 

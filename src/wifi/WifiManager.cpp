@@ -16,6 +16,7 @@
 #include <AsyncJson.h>
 #include <version.h>
 #include "Configuration.h"
+#include "AirQuality.h"
 #include "wifi/WifiManager.h"
 #include "wifi/HTMLAssets.h"
 
@@ -62,6 +63,12 @@ CWifiManager::CWifiManager(ISensorProvider *sensorProvider)
   server = new AsyncWebServer(WEB_SERVER_PORT);
   mqtt.setClient(espClient);
   connect();
+}
+
+// WiFi.localIP() is 0.0.0.0 while running as a soft AP, so the reachable address has to be
+// picked per mode rather than read from localIP() unconditionally.
+String CWifiManager::currentIP() {
+  return isApMode() ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
 }
 
 void CWifiManager::connect() {
@@ -176,9 +183,9 @@ void CWifiManager::listen() {
 
 
   server->begin();
-  Log.infoln("Web server listening on %s port %i", WiFi.localIP().toString().c_str(), WEB_SERVER_PORT);
+  Log.infoln("Web server listening on http://%s:%i", currentIP().c_str(), WEB_SERVER_PORT);
   
-  sensorJson["ip"] = WiFi.localIP().toString();
+  sensorJson["ip"] = currentIP();
   sensorJson["mac_address"] = WiFi.macAddress();
 
   // NTP
@@ -234,6 +241,16 @@ void CWifiManager::loop() {
     // WiFi is connected
 
     if (status != WF_LISTENING) {  
+      if (isApMode()) {
+        Log.noticeln("WiFi AP '%s' ready, IP address: %s", softAP_SSID, WiFi.softAPIP().toString().c_str());
+      } else {
+        Log.noticeln("WiFi connected to '%s', IP address: %s, gateway: %s, subnet: %s, RSSI: %i dBm",
+          WiFi.SSID().c_str(),
+          WiFi.localIP().toString().c_str(),
+          WiFi.gatewayIP().toString().c_str(),
+          WiFi.subnetMask().toString().c_str(),
+          WiFi.RSSI());
+      }
       // Start listening for requests
       listen();
       return;
@@ -458,12 +475,14 @@ void CWifiManager::handleSensor(AsyncWebServerRequest *request) {
       <option %s value='2'>BME280</option>\
       <option %s value='3'>DHT22</option>\
       <option %s value='4'>AHT20</option>\
+      <option %s value='5'>BME688</option>\
       "), 
       configuration.tempSensor == TEMP_SENSOR_UNSUPPORTED ? "selected" : "", 
       configuration.tempSensor == TEMP_SENSOR_DS18B20 ? "selected" : "", 
       configuration.tempSensor == TEMP_SENSOR_BME280 ? "selected" : "", 
       configuration.tempSensor == TEMP_SENSOR_DHT22 ? "selected" : "", 
-      configuration.tempSensor == TEMP_SENSOR_AHT20 ? "selected" : ""
+      configuration.tempSensor == TEMP_SENSOR_AHT20 ? "selected" : "",
+      configuration.tempSensor == TEMP_SENSOR_BME688 ? "selected" : ""
     );
 
     float t = sensorProvider->getTemperature(NULL);
@@ -774,15 +793,7 @@ bool CWifiManager::updateSensorJson() {
   } else {
 
     sensorJson["temp_sensor_type"] = configuration.tempSensor;
-    const char* tempSensorName = "unknown";
-    switch (configuration.tempSensor) {
-      case TEMP_SENSOR_DS18B20: tempSensorName = "DS18B20"; break;
-      case TEMP_SENSOR_BME280:  tempSensorName = "BME280";  break;
-      case TEMP_SENSOR_DHT22:   tempSensorName = "DHT22";   break;
-      case TEMP_SENSOR_AHT20:   tempSensorName = "AHT20";   break;
-      default:                  tempSensorName = "none";    break;
-    }
-    sensorJson["temp_sensor_name"] = tempSensorName;
+    sensorJson["temp_sensor_name"] = sensorProvider->getTempSensorName();
 
     bool current;
     float t = sensorProvider->getTemperature(&current);
@@ -805,6 +816,27 @@ bool CWifiManager::updateSensorJson() {
       sensorJson["humidity"] = correctH(h);
       sensorJson["humidit_unit"] = "percent";
       sensorJson["humidity_current"] = current;
+    }
+
+    float p = sensorProvider->getBaroPressure(&current);
+    if (current && p > 0) {
+      sensorJson["pressure_pa"] = p;
+      sensorJson["pressure_hpa"] = p / 100.0f;
+      sensorJson["pressure_unit"] = "hPa";
+    }
+
+    float gas = sensorProvider->getGasResistance(&current);
+    if (current && gas > 0) {
+      sensorJson["gas_resistance_ohms"] = gas;
+      sensorJson["gas_resistance_unit"] = "Ohm";
+    }
+
+    float iaq = sensorProvider->getIAQ(&current);
+    if (current) {
+      sensorJson["iaq"] = iaq;
+      sensorJson["iaq_rating"] = sensorProvider->getIAQRating();
+      sensorJson["iaq_accuracy"] = sensorProvider->getIAQAccuracy();
+      sensorJson["iaq_accuracy_text"] = sensorProvider->getIAQAccuracyText();
     }
   }
 #endif
@@ -922,6 +954,10 @@ void CWifiManager::printEnvSensorLabel(char *buf, size_t len) {
       snprintf_P(buf, len, PSTR("AHT20 <small>(I2C 0x%02X)</small> %s"),
         sensorProvider->getTempSensorAddress(), state);
       break;
+    case TEMP_SENSOR_BME688:
+      snprintf_P(buf, len, PSTR("%s <small>(I2C 0x%02X)</small> %s"),
+        sensorProvider->getTempSensorName(), sensorProvider->getTempSensorAddress(), state);
+      break;
     default:
       snprintf_P(buf, len, PSTR("none <small>(no sensor selected)</small>"));
       break;
@@ -951,17 +987,78 @@ void CWifiManager::printPowerSensorLabel(char *buf, size_t len) {
 #endif
 }
 
-void CWifiManager::printHTMLMain(Print *p) {
-
-  char power[512] = "";
-#ifdef CURRENT_SENSOR
-  if (sensorProvider->isCurrentSensorReady()) {
-    snprintf_P(power, sizeof(power), htmlMainPower,
-      sensorProvider->getLoadVoltage(NULL),
-      sensorProvider->getLoadCurrent(NULL),
-      sensorProvider->getLoadPower(NULL));
+// Elapsed seconds as something readable in a sentence, e.g. "3h 12m"
+static void formatDuration(uint32_t seconds, char *buf, size_t len) {
+  uint32_t days = seconds / 86400;
+  uint32_t hours = (seconds % 86400) / 3600;
+  uint32_t mins = (seconds % 3600) / 60;
+  if (days > 0) {
+    snprintf(buf, len, "%ud %uh", (unsigned)days, (unsigned)hours);
+  } else if (hours > 0) {
+    snprintf(buf, len, "%uh %um", (unsigned)hours, (unsigned)mins);
+  } else {
+    snprintf(buf, len, "%um", (unsigned)mins);
   }
+}
+
+#ifdef TEMP_SENSOR
+// Two normalized traces over the retained history. Streamed a point at a time rather than
+// composed into a buffer, so nothing large has to live on the stack.
+void CWifiManager::printHTMLIAQHistory(Print *p) {
+
+  uint8_t count = sensorProvider->getIAQHistoryCount();
+  if (count < 2) {
+    p->print(F("<p><small>Collecting history, the first points appear within the hour.</small></p>"));
+    return;
+  }
+
+  // The baseline moves over a narrow range, so it is scaled to its own extremes rather
+  // than to an absolute axis; only its shape is meaningful here.
+  float baseMin = 0, baseMax = 0;
+  for (uint8_t i = 0; i < count; i++) {
+    float b = 0;
+    if (sensorProvider->getIAQHistorySample(i, NULL, &b)) {
+      if (i == 0 || b < baseMin) baseMin = b;
+      if (i == 0 || b > baseMax) baseMax = b;
+    }
+  }
+  float baseRange = baseMax - baseMin;
+
+  p->print(F("<svg viewBox='0 0 240 60' preserveAspectRatio='none' "
+    "style='width:100%;height:60px;overflow:visible' role='img' "
+    "aria-label='Air quality index and baseline over the retained history'>"));
+
+  // Baseline shape, faint
+  p->print(F("<polyline fill='none' stroke='currentColor' stroke-opacity='0.3' "
+    "stroke-width='1.5' points='"));
+  for (uint8_t i = 0; i < count; i++) {
+    float b = 0;
+    if (!sensorProvider->getIAQHistorySample(i, NULL, &b)) continue;
+    float x = (240.0f * i) / (count - 1);
+    float y = baseRange > 0 ? 55.0f - ((b - baseMin) / baseRange) * 50.0f : 30.0f;
+    p->printf_P(PSTR("%0.1f,%0.1f "), x, y);
+  }
+  p->print(F("'/>"));
+
+  // IAQ on a fixed 0-500 axis, drawn so cleaner air sits higher
+  p->print(F("<polyline fill='none' stroke='currentColor' stroke-width='2' points='"));
+  for (uint8_t i = 0; i < count; i++) {
+    float v = 0;
+    if (!sensorProvider->getIAQHistorySample(i, &v, NULL)) continue;
+    float x = (240.0f * i) / (count - 1);
+    float y = 5.0f + constrain(v / 500.0f, 0.0f, 1.0f) * 50.0f;
+    p->printf_P(PSTR("%0.1f,%0.1f "), x, y);
+  }
+  p->print(F("'/></svg>"));
+
+  char span[32];
+  formatDuration((uint32_t)(count - 1) * IAQ_HISTORY_INTERVAL_SEC, span, sizeof(span));
+  p->printf_P(PSTR("<small>IAQ (solid, higher is cleaner) and baseline (faint) over the last %s. "
+    "History is kept in RAM and restarts on reboot.</small>"), span);
+}
 #endif
+
+void CWifiManager::printHTMLMain(Print *p) {
 
 #ifdef TEMP_SENSOR
   float t = sensorProvider->getTemperature(NULL);
@@ -971,9 +1068,55 @@ void CWifiManager::printHTMLMain(Print *p) {
   t = correctT(t);
   h = correctH(h);
 
-  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h, power);
+  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h);
 #else
-  p->printf_P(htmlMain, 0, "", 0, power);
+  p->printf_P(htmlMain, 0, "", 0);
+#endif
+
+#ifdef TEMP_SENSOR
+  bool fresh = false;
+
+  float pressure = sensorProvider->getBaroPressure(&fresh);
+  if (fresh && pressure > 0) {
+    p->printf_P(htmlMainPressure, pressure / 100.0f);
+  }
+
+  float gas = sensorProvider->getGasResistance(&fresh);
+  if (fresh && gas > 0) {
+    bool iaqFresh = false;
+    float iaq = sensorProvider->getIAQ(&iaqFresh);
+    if (iaqFresh) {
+      char tracked[32];
+      formatDuration(sensorProvider->getIAQTrackedSeconds(), tracked, sizeof(tracked));
+      float absHum = CAirQuality::absoluteHumidity(
+        sensorProvider->getTemperature(NULL), sensorProvider->getHumidity(NULL));
+
+      p->printf_P(htmlMainGasTop,
+        iaq,
+        sensorProvider->getIAQRating(),
+        sensorProvider->getIAQAccuracyText(),
+        tracked,
+        gas / 1000.0f,
+        sensorProvider->getIAQCompensatedGas() / 1000.0f,
+        absHum,
+        sensorProvider->getIAQBaseline() / 1000.0f);
+
+      printHTMLIAQHistory(p);
+      p->print(FPSTR(htmlMainGasBottom));
+    } else {
+      // Sensor present but the estimate has not settled; show the raw reading alone
+      p->printf_P(htmlMainGas, gas / 1000.0f);
+    }
+  }
+#endif
+
+#ifdef CURRENT_SENSOR
+  if (sensorProvider->isCurrentSensorReady()) {
+    p->printf_P(htmlMainPower,
+      sensorProvider->getLoadVoltage(NULL),
+      sensorProvider->getLoadCurrent(NULL),
+      sensorProvider->getLoadPower(NULL));
+  }
 #endif
 }
 
@@ -1027,6 +1170,82 @@ void CWifiManager::publishHADiscovery() {
     doc["unit_of_measurement"] = "%";
     addDevice(doc);
     publishDoc(doc);
+  }
+
+  // Pressure, reported by the BME280 and BME688 only
+  {
+    bool hasPressure = false;
+    sensorProvider->getBaroPressure(&hasPressure);
+    if (hasPressure && sensorProvider->getBaroPressure(NULL) > 0) {
+      snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_pressure/config", deviceId);
+      JsonDocument doc;
+      doc["name"] = String(configuration.name) + " Pressure";
+      doc["unique_id"] = String(deviceId) + "_pressure";
+      doc["device_class"] = "atmospheric_pressure";
+      doc["state_class"] = "measurement";
+      doc["state_topic"] = stateTopic;
+      doc["value_template"] = "{{ value_json.pressure_hpa }}";
+      doc["unit_of_measurement"] = "hPa";
+      addDevice(doc);
+      publishDoc(doc);
+    }
+  }
+
+  // Gas resistance, reported by the BME688 only. Home Assistant has no device class for a
+  // raw resistance, so it is published as a plain measurement.
+  {
+    bool hasGas = false;
+    sensorProvider->getGasResistance(&hasGas);
+    if (hasGas) {
+      snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_gas_resistance/config", deviceId);
+      JsonDocument doc;
+      doc["name"] = String(configuration.name) + " Gas Resistance";
+      doc["unique_id"] = String(deviceId) + "_gas_resistance";
+      doc["state_class"] = "measurement";
+      doc["state_topic"] = stateTopic;
+      doc["value_template"] = "{{ value_json.gas_resistance_ohms }}";
+      doc["unit_of_measurement"] = "Ω";
+      doc["icon"] = "mdi:gas-cylinder";
+      addDevice(doc);
+      publishDoc(doc);
+    }
+  }
+
+  // Estimated IAQ, BME688 only
+  {
+    bool hasIAQ = false;
+    sensorProvider->getIAQ(&hasIAQ);
+    if (hasIAQ) {
+      snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_iaq/config", deviceId);
+      {
+        JsonDocument doc;
+        doc["name"] = String(configuration.name) + " Air Quality";
+        doc["unique_id"] = String(deviceId) + "_iaq";
+        doc["device_class"] = "aqi";
+        doc["state_class"] = "measurement";
+        doc["state_topic"] = stateTopic;
+        doc["value_template"] = "{{ value_json.iaq }}";
+        doc["json_attributes_topic"] = stateTopic;
+        doc["json_attributes_template"] =
+          "{{ {'rating': value_json.iaq_rating, 'accuracy': value_json.iaq_accuracy_text} | tojson }}";
+        addDevice(doc);
+        publishDoc(doc);
+      }
+
+      // Whether the baseline has settled enough to trust the number above
+      snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_iaq_accuracy/config", deviceId);
+      {
+        JsonDocument doc;
+        doc["name"] = String(configuration.name) + " Air Quality Accuracy";
+        doc["unique_id"] = String(deviceId) + "_iaq_accuracy";
+        doc["entity_category"] = "diagnostic";
+        doc["state_topic"] = stateTopic;
+        doc["value_template"] = "{{ value_json.iaq_accuracy }}";
+        doc["icon"] = "mdi:progress-check";
+        addDevice(doc);
+        publishDoc(doc);
+      }
+    }
   }
 #endif
 

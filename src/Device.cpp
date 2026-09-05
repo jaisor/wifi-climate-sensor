@@ -12,8 +12,23 @@ static bool i2cDevicePresent(uint8_t address) {
   return Wire.endTransmission() == 0;
 }
 
+// Repeated-start register read, used to tell the BME280 and BME688 apart: both answer on
+// 0x76/0x77, so only the chip id register distinguishes them.
+static bool i2cReadRegister(uint8_t address, uint8_t reg, uint8_t *value) {
+  Wire.beginTransmission(address);
+  Wire.write(reg);
+  if (Wire.endTransmission(false) != 0) {
+    return false;
+  }
+  if (Wire.requestFrom(address, (uint8_t)1) != 1) {
+    return false;
+  }
+  *value = Wire.read();
+  return true;
+}
+
 CDevice::CDevice()
-:oneWire(NULL), ds18b20(NULL), bme280(NULL), dht(NULL), aht(NULL) {
+:oneWire(NULL), ds18b20(NULL), bme280(NULL), dht(NULL), aht(NULL), bme688(NULL) {
 
   tMillisUp = millis();
   tMillisTemp = millis();
@@ -31,6 +46,11 @@ CDevice::CDevice()
 
   i2cReady = false;
   tempSensorAddress = 0;
+  bme68xVariant = 0;
+  bme688ReadingReadyAt = 0;
+  gas_resistance = 0;
+  tLastIAQPersist = millis();
+  lastPersistedBaseline = 0;
 
   // On some targets the DS18B20 data pin doubles as an I2C line, so leave the bus alone when it is selected
   bool i2cPinConflict = false;
@@ -63,13 +83,14 @@ CDevice::CDevice()
   if (i2cReady) {
     tempSensorType detected = detectI2CTempSensor();
     bool configuredIsI2C = configuration.tempSensor == TEMP_SENSOR_BME280
-      || configuration.tempSensor == TEMP_SENSOR_AHT20;
+      || configuration.tempSensor == TEMP_SENSOR_AHT20
+      || configuration.tempSensor == TEMP_SENSOR_BME688;
 
     if (detected != TEMP_SENSOR_UNSUPPORTED
       && detected != configuration.tempSensor
       && (configuration.tempSensor == TEMP_SENSOR_UNSUPPORTED || configuredIsI2C)) {
-      Log.noticeln(F("Autodetected climate sensor %s at I2C 0x%x, replacing configured type %u"),
-        detected == TEMP_SENSOR_BME280 ? "BME280" : "AHT20", tempSensorAddress, configuration.tempSensor);
+      Log.noticeln(F("Autodetected climate sensor type %u at I2C 0x%x, replacing configured type %u"),
+        detected, tempSensorAddress, configuration.tempSensor);
       configuration.tempSensor = detected;
       EEPROM_saveConfig();
     }
@@ -149,6 +170,41 @@ CDevice::CDevice()
       Log.noticeln(F("AHT20 Initialized"));
     } break;
 
+    case TEMP_SENSOR_BME688: {
+      if (tempSensorAddress == 0) {
+        tempSensorAddress = i2cDevicePresent(BME280_I2C_ID_ALT) ? BME280_I2C_ID_ALT : BME280_I2C_ID;
+      }
+      bme688 = new Adafruit_BME680(&Wire);
+      if (!bme688->begin(tempSensorAddress, true)) {
+        Log.errorln(F("BME688 sensor initialization failed with ID %x"), tempSensorAddress);
+        sensorReady = false;
+      } else {
+        bme688->setTemperatureOversampling(BME680_OS_8X);
+        bme688->setHumidityOversampling(BME680_OS_2X);
+        bme688->setPressureOversampling(BME680_OS_4X);
+        bme688->setIIRFilterSize(BME680_FILTER_SIZE_3);
+        bme688->setGasHeater(BME688_GAS_HEATER_TEMP_C, BME688_GAS_HEATER_MS);
+        sensorReady = true;
+        tMillisTemp = 0;
+      }
+      // The gas heater makes a reading take a few hundred ms, so it is run asynchronously
+      // via beginReading()/endReading() rather than blocking the loop.
+      minDelayMs = 100;
+      bme688ReadingReadyAt = 0;
+
+      // Continue the baseline saved before the last sleep or restart rather than starting
+      // over. Time spent asleep is credited so the day-scale decay tracks wall clock time;
+      // the configured interval is the only estimate of it available before NTP is up.
+      airQuality.restore(configuration.iaqBaseline, configuration.iaqAccumulatedSec);
+      lastPersistedBaseline = configuration.iaqBaseline;
+      if (configuration.deepSleepDurationSec > 0 && airQuality.hasBaseline()) {
+        airQuality.addElapsedSeconds(configuration.deepSleepDurationSec);
+      }
+
+      Log.noticeln(F("%s Initialized"),
+        bme68xVariant == BME68X_VARIANT_BME688 ? "BME688" : "BME680");
+    } break;
+
     default:
       sensorReady = false;
       Log.errorln(F("Unsupported temperature sensor: %u"), configuration.tempSensor);
@@ -199,13 +255,34 @@ CDevice::CDevice()
 // Probes the addresses the two supported I2C climate sensors use and records which one
 // answered, so the BME280 can later be opened on whichever of its two addresses is strapped.
 tempSensorType CDevice::detectI2CTempSensor() {
-  const uint8_t bmeAddresses[] = { BME280_I2C_ID, BME280_I2C_ID_ALT };
-  for (uint8_t i = 0; i < sizeof(bmeAddresses); i++) {
-    if (i2cDevicePresent(bmeAddresses[i])) {
-      // 0x76/0x77 are shared with the BMP280, which Adafruit_BME280::begin() rejects by chip id
-      tempSensorAddress = bmeAddresses[i];
-      Log.noticeln(F("Found BME280 candidate at I2C 0x%x"), tempSensorAddress);
-      return TEMP_SENSOR_BME280;
+  const uint8_t boschAddresses[] = { BME280_I2C_ID, BME280_I2C_ID_ALT };
+  for (uint8_t i = 0; i < sizeof(boschAddresses); i++) {
+    uint8_t address = boschAddresses[i];
+    uint8_t chipId = 0;
+    if (!i2cDevicePresent(address) || !i2cReadRegister(address, BOSCH_REG_CHIP_ID, &chipId)) {
+      continue;
+    }
+
+    switch (chipId) {
+      case BOSCH_CHIP_ID_BME280:
+        tempSensorAddress = address;
+        Log.noticeln(F("Found BME280 at I2C 0x%x"), address);
+        return TEMP_SENSOR_BME280;
+
+      case BOSCH_CHIP_ID_BME68X: {
+        tempSensorAddress = address;
+        // Same chip id for both; the variant register separates the BME688 from the BME680
+        bme68xVariant = 0;
+        i2cReadRegister(address, BME68X_REG_VARIANT, &bme68xVariant);
+        Log.noticeln(F("Found %s at I2C 0x%x"),
+          bme68xVariant == BME68X_VARIANT_BME688 ? "BME688" : "BME680", address);
+        return TEMP_SENSOR_BME688;
+      }
+
+      default:
+        // Most likely a BMP280 (0x58), which has no humidity and is not supported here
+        Log.warningln(F("Unrecognized Bosch chip id 0x%x at I2C 0x%x, ignoring"), chipId, address);
+        break;
     }
   }
 
@@ -225,6 +302,7 @@ CDevice::~CDevice() {
   delete bme280;
   delete dht;
   delete aht;
+  delete bme688;
 #ifdef CURRENT_SENSOR
   delete ina219;
 #endif
@@ -270,7 +348,8 @@ void CDevice::loop() {
   uint32_t delayMs = 1000;
   if (configuration.tempSensor == TEMP_SENSOR_DHT22 || 
     configuration.tempSensor == TEMP_SENSOR_BME280 || 
-    configuration.tempSensor == TEMP_SENSOR_AHT20) {
+    configuration.tempSensor == TEMP_SENSOR_AHT20 ||
+    configuration.tempSensor == TEMP_SENSOR_BME688) {
     delayMs += minDelayMs;
   }
 
@@ -356,6 +435,31 @@ void CDevice::loop() {
       }
     } break;
 
+    case TEMP_SENSOR_BME688: {
+      // Forced-mode reading in two steps so the gas heater settling time is not spent blocking
+      if (bme688ReadingReadyAt == 0) {
+        bme688ReadingReadyAt = bme688->beginReading();
+        if (bme688ReadingReadyAt == 0) {
+          Log.warningln(F("BME688 failed to start a reading"));
+        }
+      } else if ((int32_t)(millis() - bme688ReadingReadyAt) >= 0) {
+        if (bme688->endReading()) {
+          temperature = bme688->temperature;
+          humidity = bme688->humidity;
+          baro_pressure = bme688->pressure;
+          gas_resistance = bme688->gas_resistance;
+          airQuality.update(temperature, humidity, gas_resistance);
+          persistAirQuality();
+          tLastReading = millis();
+          Log.traceln(F("BME688 temp: %FC humidity: %F%% pressure: %FPa gas: %FOhm"),
+            temperature, humidity, baro_pressure, gas_resistance);
+        } else {
+          Log.warningln(F("BME688 failed to complete a reading"));
+        }
+        bme688ReadingReadyAt = 0;
+      }
+    } break;
+
     default:
       break;
   }
@@ -401,7 +505,79 @@ float CDevice::getBaroPressure(bool *current) {
   if (current != NULL) { 
     *current = millis() - tLastReading < STALE_READING_AGE_MS; 
   }
-  return configuration.tempSensor == TEMP_SENSOR_BME280 ? baro_pressure: 0;
+  return configuration.tempSensor == TEMP_SENSOR_BME280
+    || configuration.tempSensor == TEMP_SENSOR_BME688 ? baro_pressure: 0;
+}
+
+float CDevice::getGasResistance(bool *current) {
+  if (current != NULL) { 
+    *current = configuration.tempSensor == TEMP_SENSOR_BME688
+      && millis() - tLastReading < STALE_READING_AGE_MS; 
+  }
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? gas_resistance: 0;
+}
+
+float CDevice::getIAQ(bool *current) {
+  if (current != NULL) {
+    *current = configuration.tempSensor == TEMP_SENSOR_BME688
+      && airQuality.isValid()
+      && millis() - tLastReading < STALE_READING_AGE_MS;
+  }
+  return airQuality.getIAQ();
+}
+
+uint8_t CDevice::getIAQAccuracy() {
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? airQuality.getAccuracy() : 0;
+}
+
+const char* CDevice::getIAQRating() {
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? airQuality.getRating() : "";
+}
+
+const char* CDevice::getIAQAccuracyText() {
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? airQuality.getAccuracyText() : "";
+}
+
+void CDevice::persistAirQuality(bool force) {
+  if (configuration.tempSensor != TEMP_SENSOR_BME688 || !airQuality.hasBaseline()) {
+    return;
+  }
+
+  float baseline = airQuality.getBaseline();
+
+  if (!force) {
+    // Flash wear: the baseline moves slowly, so saving on every reading would be pointless
+    // as well as damaging. Only write on a real change, and never more often than the interval.
+    if (millis() - tLastIAQPersist < IAQ_PERSIST_INTERVAL_MS) {
+      return;
+    }
+    if (lastPersistedBaseline > 0
+      && fabsf(baseline - lastPersistedBaseline) < lastPersistedBaseline * IAQ_PERSIST_DELTA) {
+      tLastIAQPersist = millis();
+      return;
+    }
+  }
+
+  configuration.iaqMagic = IAQ_STATE_MAGIC;
+  configuration.iaqBaseline = baseline;
+  configuration.iaqAccumulatedSec = airQuality.getAccumulatedSeconds();
+  EEPROM_saveConfig();
+
+  tLastIAQPersist = millis();
+  lastPersistedBaseline = baseline;
+  Log.infoln(F("Persisted IAQ baseline %F Ohm at %u tracked seconds"),
+    baseline, configuration.iaqAccumulatedSec);
+}
+
+const char* CDevice::getTempSensorName() {
+  switch (configuration.tempSensor) {
+    case TEMP_SENSOR_DS18B20: return "DS18B20";
+    case TEMP_SENSOR_BME280:  return "BME280";
+    case TEMP_SENSOR_DHT22:   return "DHT22";
+    case TEMP_SENSOR_AHT20:   return "AHT20";
+    case TEMP_SENSOR_BME688:  return bme68xVariant == BME68X_VARIANT_BME688 ? "BME688" : "BME680";
+    default:                  return "none";
+  }
 }
 #endif
 
@@ -455,6 +631,7 @@ JsonDocument& CDevice::getDeviceSettings() {
     case TEMP_SENSOR_BME280: jsonDeviceSettings["tempSensorStr"] = "BME280"; break;
     case TEMP_SENSOR_DHT22: jsonDeviceSettings["tempSensorStr"] = "DHT22"; break;
     case TEMP_SENSOR_AHT20: jsonDeviceSettings["tempSensorStr"] = "AHT20"; break;
+    case TEMP_SENSOR_BME688: jsonDeviceSettings["tempSensorStr"] = getTempSensorName(); break;
     default: jsonDeviceSettings["tempSensorStr"] = "`"; break;
   }
 

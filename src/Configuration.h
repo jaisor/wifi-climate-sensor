@@ -93,6 +93,19 @@
   #define BME280_I2C_ID 0x76
   #define BME280_I2C_ID_ALT 0x77 // Adafruit and some other breakouts strap the address line high
   #define AHT20_I2C_ID 0x38
+  // The BME688 shares 0x76/0x77 with the BME280, so the two are told apart by the chip id
+  // register rather than by address alone.
+  #define BOSCH_REG_CHIP_ID 0xD0
+  #define BOSCH_CHIP_ID_BME280 0x60
+  #define BOSCH_CHIP_ID_BME68X 0x61
+  #define BME68X_REG_VARIANT 0xF0
+  #define BME68X_VARIANT_BME688 0x01 // 0x00 is the BME680, which the same driver handles
+  #define BME688_GAS_HEATER_TEMP_C 320
+  #define BME688_GAS_HEATER_MS 150
+  // Marks the persisted IAQ block as written by this firmware rather than left over
+  #define IAQ_STATE_MAGIC 0x1A9BA5E1
+  #define IAQ_PERSIST_INTERVAL_MS 1800000UL // Save the baseline at most every 30 min
+  #define IAQ_PERSIST_DELTA 0.02f           // ...and only once it moved more than 2%
   #define TEMP_SENSOR_AUTODETECT // Probe the I2C bus for a BME280/AHT20 and select it automatically
   #if defined(CONFIG_IDF_TARGET_ESP32C3)
     #define TEMP_SENSOR_PIN GPIO_NUM_6
@@ -133,7 +146,8 @@
     TEMP_SENSOR_DS18B20 = 1,
     TEMP_SENSOR_BME280 = 2,
     TEMP_SENSOR_DHT22 = 3,
-    TEMP_SENSOR_AHT20 = 4
+    TEMP_SENSOR_AHT20 = 4,
+    TEMP_SENSOR_BME688 = 5
   } tempSensorType;
 #endif
 
@@ -171,6 +185,16 @@ struct configuration_t {
   uint16_t deepSleepDurationSec; // 0 - deep sleep disabled, stay awake
 
   char _loaded[7]; // used to check if EEPROM was correctly set
+
+  // Appended deliberately AFTER _loaded. The sentinel keeps its offset, so this firmware
+  // still validates configuration saved by a build without these fields instead of
+  // treating it as blank and resetting the user's settings. The appended bytes then read
+  // back as erased flash, which iaqMagic catches so only the IAQ block is reinitialized.
+  #if defined(TEMP_SENSOR)
+    uint32_t iaqMagic;
+    float iaqBaseline;          // compensated clean air reference, ohms
+    uint32_t iaqAccumulatedSec; // total tracked seconds, across sleeps and restarts
+  #endif
 };
 
 extern configuration_t configuration;

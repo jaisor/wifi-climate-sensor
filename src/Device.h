@@ -4,11 +4,13 @@
 #include <deque>
 #include "Configuration.h"
 #include "wifi/SensorProvider.h"
+#include "AirQuality.h"
 
 #include <OneWire.h>
 #include <DS18B20.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <Adafruit_BME680.h>
 #include <DHT.h>
 #include <DHT_U.h>
 #include <Adafruit_AHTX0.h>
@@ -42,6 +44,21 @@ public:
   virtual float getTemperature(bool *current);
   virtual float getHumidity(bool *current);
   virtual float getBaroPressure(bool *current);
+  virtual float getGasResistance(bool *current);
+  virtual float getIAQ(bool *current);
+  virtual uint8_t getIAQAccuracy();
+  virtual const char* getIAQRating();
+  virtual const char* getIAQAccuracyText();
+  virtual float getIAQBaseline() { return airQuality.getBaseline(); };
+  virtual float getIAQCompensatedGas() { return airQuality.getCompensatedGas(); };
+  virtual uint32_t getIAQTrackedSeconds() { return airQuality.getAccumulatedSeconds(); };
+  virtual uint8_t getIAQHistoryCount() { return airQuality.getHistoryCount(); };
+  virtual bool getIAQHistorySample(uint8_t i, float *iaq, float *baseline) {
+    return airQuality.getHistorySample(i, iaq, baseline);
+  };
+  // Write the IAQ baseline to the configuration. Rate limited unless forced; call with
+  // force before deep sleep so the cycle's tracking is not lost.
+  void persistAirQuality(bool force = false);
   #endif
   virtual float getVoltage(bool *current);
   virtual uint16_t getVoltageADC(bool *current);
@@ -59,6 +76,7 @@ public:
   #endif
 
   virtual uint8_t getTempSensorAddress() { return tempSensorAddress; };
+  virtual const char* getTempSensorName();
 
   virtual JsonDocument& getDeviceSettings();
   virtual bool setDeviceSettings(JsonDocument ac);
@@ -81,6 +99,14 @@ private:
   //TEMP_SENSOR_BME280
   Adafruit_BME280 *bme280;
   uint8_t tempSensorAddress; // I2C address the climate sensor answered on, 0 for the 1-Wire/digital ones
+  // TEMP_SENSOR_BME688
+  Adafruit_BME680 *bme688;
+  uint8_t bme68xVariant;        // BME68X_VARIANT_BME688 or 0x00 for the BME680
+  uint32_t bme688ReadingReadyAt; // 0 when no forced-mode reading is in flight
+  float gas_resistance;
+  CAirQuality airQuality;
+  unsigned long tLastIAQPersist;
+  float lastPersistedBaseline;
   // TEMP_SENSOR_DHT
   DHT_Unified *dht;
   // TEMP_SENSOR_AHT
