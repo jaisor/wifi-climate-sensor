@@ -6,11 +6,11 @@ Supported features:
 * ESP8266, ESP32, ESP32-C3 or ESP32-S3 based
 * Built-in web server with UI for sensor reading and configuration
 * Selectable temperature/humidity sensor: AHT20, BME280, BME688, DHT22, DS18B20
-* BME688 adds barometric pressure and gas resistance (air quality) readings
+* BME688 adds barometric pressure, gas resistance and an estimated Indoor Air Quality index
 * I2C autodetection of the AHT20, BME280 and BME688, selected and saved automatically on boot
 * Optional INA219 I2C power monitor for bus voltage and current, auto-detected at boot
 * MQTT support for transmitting sensor data
-* Home Assistant MQTT auto-discovery for temperature, humidity, pressure, gas resistance, voltage, current and power sensors
+* Home Assistant MQTT auto-discovery for temperature, humidity, pressure, gas resistance, air quality, voltage, current and power sensors
 * OTA firmware update using ElegantOTA at `/update`
 * OTA firmware update triggered via MQTT config topic
 * 3D printed case for clean and seamless mounting
@@ -66,10 +66,67 @@ barometric pressure and gas resistance. All four appear on the main page and in 
 reported by the BME280.
 
 Gas resistance is published raw in ohms as `gas_resistance_ohms` and shown in kilohms on the web page. Higher
-resistance means cleaner air. It is a relative measurement rather than a calibrated index - the heater needs several
-minutes after power-on to settle, and readings drift with humidity and temperature, so compare a device against its
-own history rather than against another unit. Deriving a true IAQ index requires Bosch's closed-source BSEC library,
-which this project does not use.
+resistance means cleaner air.
+
+## Indoor Air Quality index
+
+The raw resistance is also run through an IAQ estimator in [AirQuality.cpp](src/AirQuality.cpp), which reports on the
+same 0-500 scale BSEC uses (lower is cleaner):
+
+| IAQ | Rating |
+|---|---|
+| 0-50 | Excellent |
+| 51-100 | Good |
+| 101-150 | Lightly polluted |
+| 151-200 | Moderately polluted |
+| 201-250 | Heavily polluted |
+| 251-350 | Severely polluted |
+| 351-500 | Extremely polluted |
+
+**This is not Bosch BSEC.** BSEC is a closed-source binary with its own licence and its output cannot be reproduced
+from the public datasheet. This estimator has the same shape and reports the same quantity on the same scale, but the
+values are not interchangeable with BSEC's. Three steps:
+
+1. **Humidity and temperature compensation.** Gas resistance falls as water vapour rises, independently of air
+   quality. Temperature and relative humidity are converted to absolute humidity in g/m3 via the Magnus formula, and
+   the reading is lifted back out with `gas * exp(0.03 * absolute_humidity)`. Using absolute rather than relative
+   humidity is what makes the correction hold across different temperatures.
+2. **Baseline tracking.** The compensated value feeds a clean-air reference that rises towards cleaner readings with
+   a 5 minute time constant but decays towards dirtier ones over a day. The asymmetry is the point: a fast decay
+   would quietly adopt a persistently polluted room as the new "clean" reference. Adaptation is driven by elapsed
+   time rather than sample count, so the read interval does not change the tuning.
+3. **Scoring.** 75% of the score is how close the compensated reading sits to the baseline, 25% is how close humidity
+   is to an ideal 40%RH. The combined 0-100 score is inverted onto the 0-500 IAQ scale.
+
+`iaq_accuracy` mirrors BSEC's field of the same name and says how far the baseline has settled: `0` stabilizing
+(the first 5 minutes are discarded while the heater drifts), `1` uncertain, `2` calibrating after 10 minutes, `3`
+calibrated after 30. Treat the index as meaningless until it reads at least `2`.
+
+### Surviving restarts and deep sleep
+
+The baseline and the total tracked time are persisted in the configuration, so a restart or a deep sleep cycle
+continues the same calibration instead of starting from nothing. Three things make that work:
+
+- **Elapsed time is credited on wake.** The baseline decays on elapsed time, and a sleeping device is only awake for
+  a few seconds per cycle, so without this its day-scale decay would take months of real time. On wake the configured
+  `deepSleepDurationSec` is added to the next reading's time delta. Over a simulated 24h of sustained pollution a
+  device sleeping on a 5 minute interval lands on IAQ 249 against 251 for an always-on one; uncredited it would
+  report 316 and barely move its baseline.
+- **A resumed session skips the burn-in.** The 5 minute burn-in exists for the heater's initial drift on a cold
+  start. A resumed session already has a trusted baseline, so it only discards the first couple of seconds - a
+  sleeping device is rarely awake long enough for more.
+- **Writes are rate limited.** The baseline is saved at most every 30 minutes and only once it has moved more than
+  2% (`IAQ_PERSIST_INTERVAL_MS` and `IAQ_PERSIST_DELTA`), plus once unconditionally just before entering deep sleep.
+  Saving on every reading would wear the flash for no benefit.
+
+The persisted fields are appended to `configuration_t` *after* the `_loaded` sentinel on purpose. The sentinel keeps
+its offset, so this firmware still accepts configuration written by a build that predates the IAQ block rather than
+treating it as blank and resetting your settings; the appended bytes then read back as erased flash, which the
+`iaqMagic` marker catches so only the IAQ state is reinitialized.
+
+Two limits remain. Time spent fully powered off is not measured - only the configured sleep interval is credited, so
+a device off for a week resumes as though it slept one interval. And an index built on a self-calibrating baseline is
+relative to that sensor's own history; compare a device against itself over time, not against another unit.
 
 The heater runs at `BME688_GAS_HEATER_TEMP_C` for `BME688_GAS_HEATER_MS` (320C for 150ms by default, both in
 [Configuration.h](src/Configuration.h)). Because that makes a measurement take a few hundred milliseconds, readings
@@ -109,6 +166,10 @@ The device publishes a JSON payload to `{mqttTopic}/json` every 5 minutes. Examp
   "humidity": 55.2,
   "pressure_hpa": 1013.2,
   "gas_resistance_ohms": 142300,
+  "iaq": 32.5,
+  "iaq_rating": "Excellent",
+  "iaq_accuracy": 3,
+  "iaq_accuracy_text": "calibrated",
   "voltage_v": 12.1,
   "ina219_voltage_v": 12.043,
   "ina219_current_ma": 184.2,
@@ -130,6 +191,8 @@ On every MQTT publish the device sends Home Assistant MQTT discovery messages, a
 | Humidity | `homeassistant/sensor/{deviceId}_humidity/config` |
 | Pressure | `homeassistant/sensor/{deviceId}_pressure/config` |
 | Gas resistance | `homeassistant/sensor/{deviceId}_gas_resistance/config` |
+| Air quality (IAQ) | `homeassistant/sensor/{deviceId}_iaq/config` |
+| Air quality accuracy | `homeassistant/sensor/{deviceId}_iaq_accuracy/config` |
 | Voltage | `homeassistant/sensor/{deviceId}_voltage/config` |
 | INA219 Voltage | `homeassistant/sensor/{deviceId}_ina219_voltage/config` |
 | INA219 Current | `homeassistant/sensor/{deviceId}_ina219_current/config` |

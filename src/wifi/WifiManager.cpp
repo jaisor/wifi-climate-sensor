@@ -822,6 +822,14 @@ bool CWifiManager::updateSensorJson() {
       sensorJson["gas_resistance_ohms"] = gas;
       sensorJson["gas_resistance_unit"] = "Ohm";
     }
+
+    float iaq = sensorProvider->getIAQ(&current);
+    if (current) {
+      sensorJson["iaq"] = iaq;
+      sensorJson["iaq_rating"] = sensorProvider->getIAQRating();
+      sensorJson["iaq_accuracy"] = sensorProvider->getIAQAccuracy();
+      sensorJson["iaq_accuracy_text"] = sensorProvider->getIAQAccuracyText();
+    }
   }
 #endif
 #ifdef VOLTAGE_SENSOR
@@ -973,7 +981,7 @@ void CWifiManager::printPowerSensorLabel(char *buf, size_t len) {
 
 void CWifiManager::printHTMLMain(Print *p) {
 
-  char climate[768] = "";
+  char climate[1536] = "";
 #ifdef TEMP_SENSOR
   {
     size_t len = 0;
@@ -981,6 +989,11 @@ void CWifiManager::printHTMLMain(Print *p) {
     float pressure = sensorProvider->getBaroPressure(&fresh);
     if (fresh && pressure > 0) {
       len += snprintf_P(climate, sizeof(climate), htmlMainPressure, pressure / 100.0f);
+    }
+    float iaq = sensorProvider->getIAQ(&fresh);
+    if (fresh && len < sizeof(climate)) {
+      len += snprintf_P(climate + len, sizeof(climate) - len, htmlMainIAQ,
+        iaq, sensorProvider->getIAQRating(), sensorProvider->getIAQAccuracyText());
     }
     float gas = sensorProvider->getGasResistance(&fresh);
     if (fresh && gas > 0 && len < sizeof(climate)) {
@@ -1101,6 +1114,43 @@ void CWifiManager::publishHADiscovery() {
       doc["icon"] = "mdi:gas-cylinder";
       addDevice(doc);
       publishDoc(doc);
+    }
+  }
+
+  // Estimated IAQ, BME688 only
+  {
+    bool hasIAQ = false;
+    sensorProvider->getIAQ(&hasIAQ);
+    if (hasIAQ) {
+      snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_iaq/config", deviceId);
+      {
+        JsonDocument doc;
+        doc["name"] = String(configuration.name) + " Air Quality";
+        doc["unique_id"] = String(deviceId) + "_iaq";
+        doc["device_class"] = "aqi";
+        doc["state_class"] = "measurement";
+        doc["state_topic"] = stateTopic;
+        doc["value_template"] = "{{ value_json.iaq }}";
+        doc["json_attributes_topic"] = stateTopic;
+        doc["json_attributes_template"] =
+          "{{ {'rating': value_json.iaq_rating, 'accuracy': value_json.iaq_accuracy_text} | tojson }}";
+        addDevice(doc);
+        publishDoc(doc);
+      }
+
+      // Whether the baseline has settled enough to trust the number above
+      snprintf(discoveryTopic, sizeof(discoveryTopic), "homeassistant/sensor/%u_iaq_accuracy/config", deviceId);
+      {
+        JsonDocument doc;
+        doc["name"] = String(configuration.name) + " Air Quality Accuracy";
+        doc["unique_id"] = String(deviceId) + "_iaq_accuracy";
+        doc["entity_category"] = "diagnostic";
+        doc["state_topic"] = stateTopic;
+        doc["value_template"] = "{{ value_json.iaq_accuracy }}";
+        doc["icon"] = "mdi:progress-check";
+        addDevice(doc);
+        publishDoc(doc);
+      }
     }
   }
 #endif

@@ -78,6 +78,9 @@ void EEPROM_loadConfig() {
       configuration.tempUnit = TEMP_UNIT_FAHRENHEIT;
       memset(configuration.tCorrection, 0, 2 * sizeof(sensorCorrection));
       memset(configuration.hCorrection, 0, 2 * sizeof(sensorCorrection));
+      configuration.iaqMagic = 0;
+      configuration.iaqBaseline = 0;
+      configuration.iaqAccumulatedSec = 0;
     #endif
 
     configuration.deepSleepDurationSec = 0;
@@ -93,6 +96,20 @@ void EEPROM_loadConfig() {
       strcpy(configuration.wifiSsid, "");
       break;
     }
+  }
+#endif
+
+#if defined(TEMP_SENSOR)
+  // Written by a build without the IAQ block, or never written at all: drop it and start the
+  // baseline over rather than scoring against erased flash. The rest of the config is intact.
+  if (configuration.iaqMagic != IAQ_STATE_MAGIC) {
+    Log.infoln("No stored IAQ baseline, starting a fresh one");
+    configuration.iaqMagic = IAQ_STATE_MAGIC;
+    configuration.iaqBaseline = 0;
+    configuration.iaqAccumulatedSec = 0;
+  } else {
+    Log.noticeln("Restored IAQ baseline %F Ohm after %u tracked seconds",
+      configuration.iaqBaseline, configuration.iaqAccumulatedSec);
   }
 #endif
 

@@ -4,6 +4,7 @@
 #include <deque>
 #include "Configuration.h"
 #include "wifi/SensorProvider.h"
+#include "AirQuality.h"
 
 #include <OneWire.h>
 #include <DS18B20.h>
@@ -44,6 +45,13 @@ public:
   virtual float getHumidity(bool *current);
   virtual float getBaroPressure(bool *current);
   virtual float getGasResistance(bool *current);
+  virtual float getIAQ(bool *current);
+  virtual uint8_t getIAQAccuracy();
+  virtual const char* getIAQRating();
+  virtual const char* getIAQAccuracyText();
+  // Write the IAQ baseline to the configuration. Rate limited unless forced; call with
+  // force before deep sleep so the cycle's tracking is not lost.
+  void persistAirQuality(bool force = false);
   #endif
   virtual float getVoltage(bool *current);
   virtual uint16_t getVoltageADC(bool *current);
@@ -89,6 +97,9 @@ private:
   uint8_t bme68xVariant;        // BME68X_VARIANT_BME688 or 0x00 for the BME680
   uint32_t bme688ReadingReadyAt; // 0 when no forced-mode reading is in flight
   float gas_resistance;
+  CAirQuality airQuality;
+  unsigned long tLastIAQPersist;
+  float lastPersistedBaseline;
   // TEMP_SENSOR_DHT
   DHT_Unified *dht;
   // TEMP_SENSOR_AHT

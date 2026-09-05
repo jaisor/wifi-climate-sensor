@@ -102,6 +102,10 @@
   #define BME68X_VARIANT_BME688 0x01 // 0x00 is the BME680, which the same driver handles
   #define BME688_GAS_HEATER_TEMP_C 320
   #define BME688_GAS_HEATER_MS 150
+  // Marks the persisted IAQ block as written by this firmware rather than left over
+  #define IAQ_STATE_MAGIC 0x1A9BA5E1
+  #define IAQ_PERSIST_INTERVAL_MS 1800000UL // Save the baseline at most every 30 min
+  #define IAQ_PERSIST_DELTA 0.02f           // ...and only once it moved more than 2%
   #define TEMP_SENSOR_AUTODETECT // Probe the I2C bus for a BME280/AHT20 and select it automatically
   #if defined(CONFIG_IDF_TARGET_ESP32C3)
     #define TEMP_SENSOR_PIN GPIO_NUM_6
@@ -181,6 +185,16 @@ struct configuration_t {
   uint16_t deepSleepDurationSec; // 0 - deep sleep disabled, stay awake
 
   char _loaded[7]; // used to check if EEPROM was correctly set
+
+  // Appended deliberately AFTER _loaded. The sentinel keeps its offset, so this firmware
+  // still validates configuration saved by a build without these fields instead of
+  // treating it as blank and resetting the user's settings. The appended bytes then read
+  // back as erased flash, which iaqMagic catches so only the IAQ block is reinitialized.
+  #if defined(TEMP_SENSOR)
+    uint32_t iaqMagic;
+    float iaqBaseline;          // compensated clean air reference, ohms
+    uint32_t iaqAccumulatedSec; // total tracked seconds, across sleeps and restarts
+  #endif
 };
 
 extern configuration_t configuration;

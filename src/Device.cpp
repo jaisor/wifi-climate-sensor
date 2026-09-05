@@ -49,6 +49,8 @@ CDevice::CDevice()
   bme68xVariant = 0;
   bme688ReadingReadyAt = 0;
   gas_resistance = 0;
+  tLastIAQPersist = millis();
+  lastPersistedBaseline = 0;
 
   // On some targets the DS18B20 data pin doubles as an I2C line, so leave the bus alone when it is selected
   bool i2cPinConflict = false;
@@ -189,6 +191,16 @@ CDevice::CDevice()
       // via beginReading()/endReading() rather than blocking the loop.
       minDelayMs = 100;
       bme688ReadingReadyAt = 0;
+
+      // Continue the baseline saved before the last sleep or restart rather than starting
+      // over. Time spent asleep is credited so the day-scale decay tracks wall clock time;
+      // the configured interval is the only estimate of it available before NTP is up.
+      airQuality.restore(configuration.iaqBaseline, configuration.iaqAccumulatedSec);
+      lastPersistedBaseline = configuration.iaqBaseline;
+      if (configuration.deepSleepDurationSec > 0 && airQuality.hasBaseline()) {
+        airQuality.addElapsedSeconds(configuration.deepSleepDurationSec);
+      }
+
       Log.noticeln(F("%s Initialized"),
         bme68xVariant == BME68X_VARIANT_BME688 ? "BME688" : "BME680");
     } break;
@@ -436,6 +448,8 @@ void CDevice::loop() {
           humidity = bme688->humidity;
           baro_pressure = bme688->pressure;
           gas_resistance = bme688->gas_resistance;
+          airQuality.update(temperature, humidity, gas_resistance);
+          persistAirQuality();
           tLastReading = millis();
           Log.traceln(F("BME688 temp: %FC humidity: %F%% pressure: %FPa gas: %FOhm"),
             temperature, humidity, baro_pressure, gas_resistance);
@@ -501,6 +515,58 @@ float CDevice::getGasResistance(bool *current) {
       && millis() - tLastReading < STALE_READING_AGE_MS; 
   }
   return configuration.tempSensor == TEMP_SENSOR_BME688 ? gas_resistance: 0;
+}
+
+float CDevice::getIAQ(bool *current) {
+  if (current != NULL) {
+    *current = configuration.tempSensor == TEMP_SENSOR_BME688
+      && airQuality.isValid()
+      && millis() - tLastReading < STALE_READING_AGE_MS;
+  }
+  return airQuality.getIAQ();
+}
+
+uint8_t CDevice::getIAQAccuracy() {
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? airQuality.getAccuracy() : 0;
+}
+
+const char* CDevice::getIAQRating() {
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? airQuality.getRating() : "";
+}
+
+const char* CDevice::getIAQAccuracyText() {
+  return configuration.tempSensor == TEMP_SENSOR_BME688 ? airQuality.getAccuracyText() : "";
+}
+
+void CDevice::persistAirQuality(bool force) {
+  if (configuration.tempSensor != TEMP_SENSOR_BME688 || !airQuality.hasBaseline()) {
+    return;
+  }
+
+  float baseline = airQuality.getBaseline();
+
+  if (!force) {
+    // Flash wear: the baseline moves slowly, so saving on every reading would be pointless
+    // as well as damaging. Only write on a real change, and never more often than the interval.
+    if (millis() - tLastIAQPersist < IAQ_PERSIST_INTERVAL_MS) {
+      return;
+    }
+    if (lastPersistedBaseline > 0
+      && fabsf(baseline - lastPersistedBaseline) < lastPersistedBaseline * IAQ_PERSIST_DELTA) {
+      tLastIAQPersist = millis();
+      return;
+    }
+  }
+
+  configuration.iaqMagic = IAQ_STATE_MAGIC;
+  configuration.iaqBaseline = baseline;
+  configuration.iaqAccumulatedSec = airQuality.getAccumulatedSeconds();
+  EEPROM_saveConfig();
+
+  tLastIAQPersist = millis();
+  lastPersistedBaseline = baseline;
+  Log.infoln(F("Persisted IAQ baseline %F Ohm at %u tracked seconds"),
+    baseline, configuration.iaqAccumulatedSec);
 }
 
 const char* CDevice::getTempSensorName() {

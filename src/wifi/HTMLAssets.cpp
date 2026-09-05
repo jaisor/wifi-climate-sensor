@@ -269,6 +269,22 @@ const char htmlMainPressure[] PROGMEM = R"=====(
       </article>
 )=====";
 
+const char htmlMainIAQ[] PROGMEM = R"=====(
+      <article>
+        <header class="grid">
+          <h1>🌬️ Air Quality</h1>
+          <h1 style="text-align: right;"><kbd>%0.0f IAQ</kbd></h1>
+        </header>
+        <div class="grid">
+          <div><strong>%s</strong></div>
+          <div style="text-align: right;"><small>baseline %s</small></div>
+        </div>
+        <p><small>0-50 excellent, 51-100 good, 101-150 lightly polluted, 151-200 moderately
+        polluted, 201-250 heavily polluted, 251+ severely polluted. Estimated from gas
+        resistance, not Bosch BSEC.</small></p>
+      </article>
+)=====";
+
 const char htmlMainGas[] PROGMEM = R"=====(
       <article>
         <header class="grid">

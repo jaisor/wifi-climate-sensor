@@ -9,6 +9,7 @@ extern const char htmlSensor[];
 extern const char htmlDevice[];
 extern const char htmlMain[];
 extern const char htmlMainPressure[];
+extern const char htmlMainIAQ[];
 extern const char htmlMainGas[];
 extern const char htmlMainPower[];
 

@@ -17,6 +17,10 @@ public:
   virtual uint8_t getTempSensorAddress() { return 0; };
   virtual const char* getTempSensorName() { return "none"; };
   virtual float getGasResistance(bool *current) { if (current != NULL) { *current = false; } return 0; };
+  virtual float getIAQ(bool *current) { if (current != NULL) { *current = false; } return 0; };
+  virtual uint8_t getIAQAccuracy() { return 0; };
+  virtual const char* getIAQRating() { return ""; };
+  virtual const char* getIAQAccuracyText() { return ""; };
   virtual uint32_t getDeviceId() { return CONFIG_getDeviceId(); };
   virtual uint32_t getUptime() { return CONFIG_getUpTime(); };
   virtual bool isSensorReady() { return false; };
