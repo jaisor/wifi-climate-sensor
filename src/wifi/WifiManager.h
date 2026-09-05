@@ -45,6 +45,7 @@ private:
   JsonDocument sensorJson;
   JsonDocument configJson;
 
+  String currentIP();
   void connect();
   void listen();
 

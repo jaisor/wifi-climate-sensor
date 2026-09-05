@@ -15,6 +15,8 @@ public:
   virtual float getLoadPower(bool *current) { if (current != NULL) { *current = false; } return 0; };
   virtual bool isCurrentSensorReady() { return false; };
   virtual uint8_t getTempSensorAddress() { return 0; };
+  virtual const char* getTempSensorName() { return "none"; };
+  virtual float getGasResistance(bool *current) { if (current != NULL) { *current = false; } return 0; };
   virtual uint32_t getDeviceId() { return CONFIG_getDeviceId(); };
   virtual uint32_t getUptime() { return CONFIG_getUpTime(); };
   virtual bool isSensorReady() { return false; };

@@ -5,11 +5,12 @@
 Supported features:
 * ESP8266, ESP32, ESP32-C3 or ESP32-S3 based
 * Built-in web server with UI for sensor reading and configuration
-* Selectable temperature/humidity sensor: AHT20, BME280, DHT22, DS18B20
-* I2C autodetection of the AHT20 and BME280, selected and saved automatically on boot
+* Selectable temperature/humidity sensor: AHT20, BME280, BME688, DHT22, DS18B20
+* BME688 adds barometric pressure and gas resistance (air quality) readings
+* I2C autodetection of the AHT20, BME280 and BME688, selected and saved automatically on boot
 * Optional INA219 I2C power monitor for bus voltage and current, auto-detected at boot
 * MQTT support for transmitting sensor data
-* Home Assistant MQTT auto-discovery for temperature, humidity, voltage, current and power sensors
+* Home Assistant MQTT auto-discovery for temperature, humidity, pressure, gas resistance, voltage, current and power sensors
 * OTA firmware update using ElegantOTA at `/update`
 * OTA firmware update triggered via MQTT config topic
 * 3D printed case for clean and seamless mounting
@@ -37,14 +38,18 @@ This can be forced by power-cycling the device several times. Powered up duratio
 On boot the I2C bus is probed for the two climate sensors that live on it, and the first match is selected and
 persisted to EEPROM, so a freshly flashed board generally needs no sensor configuration at all:
 
-| Sensor | Addresses probed |
-|---|---|
-| BME280 | `0x76`, then `0x77` |
-| AHT20 | `0x38` |
+| Sensor | Addresses probed | Chip id at `0xD0` |
+|---|---|---|
+| BME280 | `0x76`, then `0x77` | `0x60` |
+| BME688 | `0x76`, then `0x77` | `0x61` |
+| AHT20 | `0x38` | - |
 
-Whichever address answers is remembered, so a BME280 strapped to `0x77` is opened on `0x77`. Because `0x76`/`0x77`
-are shared with the BMP280, a BMP280 is probed as a BME280 candidate but rejected by the chip id check inside
-`Adafruit_BME280::begin()`, leaving the sensor unconfigured rather than misreported.
+The BME280 and BME688 share the same two addresses, so an address probe alone cannot tell them apart. The chip id
+register `0xD0` is read to decide, and anything else there (a BMP280 reports `0x58`) is logged and skipped rather
+than misreported. Whichever address answered is remembered, so a sensor strapped to `0x77` is opened on `0x77`.
+
+The BME680 and BME688 both report chip id `0x61` and use the same driver. The variant register `0xF0` separates
+them (`0x01` is the BME688) and only affects the name shown in the UI and published over MQTT.
 
 Autodetection only overrides the stored setting when nothing is configured yet, or when the configured sensor is
 itself an I2C one that no longer answers - swapping a BME280 for an AHT20 is picked up on the next boot. An explicit
@@ -53,6 +58,22 @@ DS18B20 or DHT22 selection is never overridden, since neither is on the I2C bus.
 
 Note that on the ESP32-C3 the DS18B20 data pin and `SCL` are the same GPIO. When a DS18B20 is selected the I2C bus
 is never started, so neither autodetection nor the INA219 runs on that target.
+
+# BME688 air quality
+
+The BME688 is wired to the same I2C pins as the AHT20 and BME280 and reports four values: temperature, humidity,
+barometric pressure and gas resistance. All four appear on the main page and in the MQTT payload; pressure is also
+reported by the BME280.
+
+Gas resistance is published raw in ohms as `gas_resistance_ohms` and shown in kilohms on the web page. Higher
+resistance means cleaner air. It is a relative measurement rather than a calibrated index - the heater needs several
+minutes after power-on to settle, and readings drift with humidity and temperature, so compare a device against its
+own history rather than against another unit. Deriving a true IAQ index requires Bosch's closed-source BSEC library,
+which this project does not use.
+
+The heater runs at `BME688_GAS_HEATER_TEMP_C` for `BME688_GAS_HEATER_MS` (320C for 150ms by default, both in
+[Configuration.h](src/Configuration.h)). Because that makes a measurement take a few hundred milliseconds, readings
+are taken asynchronously with `beginReading()`/`endReading()` so the main loop is never blocked waiting on the heater.
 
 # Power monitoring (INA219)
 
@@ -86,6 +107,8 @@ The device publishes a JSON payload to `{mqttTopic}/json` every 5 minutes. Examp
   "temperature": 21.5,
   "temperature_unit": "Celsius",
   "humidity": 55.2,
+  "pressure_hpa": 1013.2,
+  "gas_resistance_ohms": 142300,
   "voltage_v": 12.1,
   "ina219_voltage_v": 12.043,
   "ina219_current_ma": 184.2,
@@ -105,6 +128,8 @@ On every MQTT publish the device sends Home Assistant MQTT discovery messages, a
 |---|---|
 | Temperature | `homeassistant/sensor/{deviceId}_temperature/config` |
 | Humidity | `homeassistant/sensor/{deviceId}_humidity/config` |
+| Pressure | `homeassistant/sensor/{deviceId}_pressure/config` |
+| Gas resistance | `homeassistant/sensor/{deviceId}_gas_resistance/config` |
 | Voltage | `homeassistant/sensor/{deviceId}_voltage/config` |
 | INA219 Voltage | `homeassistant/sensor/{deviceId}_ina219_voltage/config` |
 | INA219 Current | `homeassistant/sensor/{deviceId}_ina219_current/config` |

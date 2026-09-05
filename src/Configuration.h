@@ -93,6 +93,15 @@
   #define BME280_I2C_ID 0x76
   #define BME280_I2C_ID_ALT 0x77 // Adafruit and some other breakouts strap the address line high
   #define AHT20_I2C_ID 0x38
+  // The BME688 shares 0x76/0x77 with the BME280, so the two are told apart by the chip id
+  // register rather than by address alone.
+  #define BOSCH_REG_CHIP_ID 0xD0
+  #define BOSCH_CHIP_ID_BME280 0x60
+  #define BOSCH_CHIP_ID_BME68X 0x61
+  #define BME68X_REG_VARIANT 0xF0
+  #define BME68X_VARIANT_BME688 0x01 // 0x00 is the BME680, which the same driver handles
+  #define BME688_GAS_HEATER_TEMP_C 320
+  #define BME688_GAS_HEATER_MS 150
   #define TEMP_SENSOR_AUTODETECT // Probe the I2C bus for a BME280/AHT20 and select it automatically
   #if defined(CONFIG_IDF_TARGET_ESP32C3)
     #define TEMP_SENSOR_PIN GPIO_NUM_6
@@ -133,7 +142,8 @@
     TEMP_SENSOR_DS18B20 = 1,
     TEMP_SENSOR_BME280 = 2,
     TEMP_SENSOR_DHT22 = 3,
-    TEMP_SENSOR_AHT20 = 4
+    TEMP_SENSOR_AHT20 = 4,
+    TEMP_SENSOR_BME688 = 5
   } tempSensorType;
 #endif
 

@@ -256,7 +256,27 @@ const char htmlMain[] PROGMEM = R"=====(
           Graph goes here
         </p>
       </article>
-      %s
+      %s%s
+)=====";
+
+// Rendered into htmlMain only when the climate sensor reports these
+const char htmlMainPressure[] PROGMEM = R"=====(
+      <article>
+        <header class="grid">
+          <h1>🌀 Pressure</h1>
+          <h1 style="text-align: right;"><kbd>%0.1f hPa</kbd></h1>
+        </header>
+      </article>
+)=====";
+
+const char htmlMainGas[] PROGMEM = R"=====(
+      <article>
+        <header class="grid">
+          <h1>💨 Gas</h1>
+          <h1 style="text-align: right;"><kbd>%0.1f kΩ</kbd></h1>
+        </header>
+        <p><small>higher resistance means cleaner air; the BME688 heater needs some minutes to settle</small></p>
+      </article>
 )=====";
 
 // Rendered into htmlMain only when a power sensor is actually detected

@@ -9,6 +9,7 @@
 #include <DS18B20.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <Adafruit_BME680.h>
 #include <DHT.h>
 #include <DHT_U.h>
 #include <Adafruit_AHTX0.h>
@@ -42,6 +43,7 @@ public:
   virtual float getTemperature(bool *current);
   virtual float getHumidity(bool *current);
   virtual float getBaroPressure(bool *current);
+  virtual float getGasResistance(bool *current);
   #endif
   virtual float getVoltage(bool *current);
   virtual uint16_t getVoltageADC(bool *current);
@@ -59,6 +61,7 @@ public:
   #endif
 
   virtual uint8_t getTempSensorAddress() { return tempSensorAddress; };
+  virtual const char* getTempSensorName();
 
   virtual JsonDocument& getDeviceSettings();
   virtual bool setDeviceSettings(JsonDocument ac);
@@ -81,6 +84,11 @@ private:
   //TEMP_SENSOR_BME280
   Adafruit_BME280 *bme280;
   uint8_t tempSensorAddress; // I2C address the climate sensor answered on, 0 for the 1-Wire/digital ones
+  // TEMP_SENSOR_BME688
+  Adafruit_BME680 *bme688;
+  uint8_t bme68xVariant;        // BME68X_VARIANT_BME688 or 0x00 for the BME680
+  uint32_t bme688ReadingReadyAt; // 0 when no forced-mode reading is in flight
+  float gas_resistance;
   // TEMP_SENSOR_DHT
   DHT_Unified *dht;
   // TEMP_SENSOR_AHT
