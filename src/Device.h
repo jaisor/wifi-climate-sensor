@@ -49,6 +49,13 @@ public:
   virtual uint8_t getIAQAccuracy();
   virtual const char* getIAQRating();
   virtual const char* getIAQAccuracyText();
+  virtual float getIAQBaseline() { return airQuality.getBaseline(); };
+  virtual float getIAQCompensatedGas() { return airQuality.getCompensatedGas(); };
+  virtual uint32_t getIAQTrackedSeconds() { return airQuality.getAccumulatedSeconds(); };
+  virtual uint8_t getIAQHistoryCount() { return airQuality.getHistoryCount(); };
+  virtual bool getIAQHistorySample(uint8_t i, float *iaq, float *baseline) {
+    return airQuality.getHistorySample(i, iaq, baseline);
+  };
   // Write the IAQ baseline to the configuration. Rate limited unless forced; call with
   // force before deep sleep so the cycle's tracking is not lost.
   void persistAirQuality(bool force = false);

@@ -264,7 +264,6 @@ const char htmlMain[] PROGMEM = R"=====(
           Graph goes here
         </p>
       </article>
-      %s%s
 )=====";
 
 // Rendered into htmlMain only when the climate sensor reports these
@@ -277,29 +276,46 @@ const char htmlMainPressure[] PROGMEM = R"=====(
       </article>
 )=====";
 
-const char htmlMainIAQ[] PROGMEM = R"=====(
+// Gas sensor panel: the raw resistance plus everything the IAQ estimate is derived from.
+// Split so the sparkline between the two halves can be streamed instead of buffered.
+const char htmlMainGasTop[] PROGMEM = R"=====(
       <article>
         <header class="grid">
-          <h1>🌬️ Air Quality</h1>
+          <h1>💨 Gas &amp; Air Quality</h1>
           <h1 style="text-align: right;"><kbd>%0.0f IAQ</kbd></h1>
         </header>
         <div class="grid">
           <div><strong>%s</strong></div>
-          <div style="text-align: right;"><small>baseline %s</small></div>
+          <div style="text-align: right;"><small>baseline %s, tracking %s</small></div>
         </div>
-        <p><small>0-50 excellent, 51-100 good, 101-150 lightly polluted, 151-200 moderately
-        polluted, 201-250 heavily polluted, 251+ severely polluted. Estimated from gas
-        resistance, not Bosch BSEC.</small></p>
+        <table>
+          <tbody>
+            <tr><th scope="row">Gas resistance</th><td><kbd>%0.1f kΩ</kbd></td>
+                <td><small>raw sensor reading</small></td></tr>
+            <tr><th scope="row">Humidity compensated</th><td><kbd>%0.1f kΩ</kbd></td>
+                <td><small>corrected for %0.1f g/m³ water vapour</small></td></tr>
+            <tr><th scope="row">Clean air baseline</th><td><kbd>%0.1f kΩ</kbd></td>
+                <td><small>rises over minutes, decays over a day</small></td></tr>
+          </tbody>
+        </table>
+)=====";
+
+const char htmlMainGasBottom[] PROGMEM = R"=====(
+        <p><small>IAQ 0-50 excellent, 51-100 good, 101-150 lightly polluted, 151-200 moderately
+        polluted, 201-250 heavily polluted, 251+ severely polluted. Higher resistance means
+        cleaner air. Estimated from gas resistance, not Bosch BSEC.</small></p>
       </article>
 )=====";
 
+// Gas resistance only, for a BME68x whose IAQ estimate has not settled yet
 const char htmlMainGas[] PROGMEM = R"=====(
       <article>
         <header class="grid">
           <h1>💨 Gas</h1>
           <h1 style="text-align: right;"><kbd>%0.1f kΩ</kbd></h1>
         </header>
-        <p><small>higher resistance means cleaner air; the BME688 heater needs some minutes to settle</small></p>
+        <p><small>air quality index still stabilizing; the heater needs a few minutes after
+        power-on before the reading can be scored</small></p>
       </article>
 )=====";
 

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <math.h>
+#include <string.h>
 #include <ArduinoLog.h>
 
 #include "AirQuality.h"
@@ -19,6 +20,40 @@ void CAirQuality::reset() {
   iaq = 0;
   score = 0;
   accuracy = 0;
+  historyCount = 0;
+  historyHead = 0;
+  lastHistorySec = 0;
+  memset(history, 0, sizeof(history));
+}
+
+void CAirQuality::recordHistory() {
+  // First sample lands immediately so a freshly loaded page is not blank for 15 minutes
+  if (historyCount > 0 && accumulatedSec - lastHistorySec < IAQ_HISTORY_INTERVAL_SEC) {
+    return;
+  }
+  lastHistorySec = accumulatedSec;
+  history[historyHead].iaq = iaq;
+  history[historyHead].baseline = baseline;
+  historyHead = (historyHead + 1) % IAQ_HISTORY_SIZE;
+  if (historyCount < IAQ_HISTORY_SIZE) {
+    historyCount++;
+  }
+}
+
+bool CAirQuality::getHistorySample(uint8_t index, float *outIaq, float *outBaseline) const {
+  if (index >= historyCount) {
+    return false;
+  }
+  // historyHead is the next slot to write, so the oldest entry follows it once wrapped
+  uint8_t start = historyCount < IAQ_HISTORY_SIZE ? 0 : historyHead;
+  const iaqSample_t &sample = history[(start + index) % IAQ_HISTORY_SIZE];
+  if (outIaq != NULL) {
+    *outIaq = sample.iaq;
+  }
+  if (outBaseline != NULL) {
+    *outBaseline = sample.baseline;
+  }
+  return true;
 }
 
 void CAirQuality::restore(float savedBaseline, uint32_t savedAccumulatedSec) {
@@ -129,6 +164,8 @@ void CAirQuality::update(float temperatureC, float humidityPct, float gasResista
   } else {
     accuracy = 3;
   }
+
+  recordHistory();
 
   Log.verboseln(F("IAQ %F (score %F) gas %FOhm comp %FOhm baseline %FOhm absHum %Fg/m3 accuracy %u"),
     iaq, score, gasResistanceOhms, compGas, baseline, absHum, accuracy);

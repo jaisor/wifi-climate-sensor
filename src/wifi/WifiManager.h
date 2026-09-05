@@ -64,6 +64,9 @@ private:
   void printHTMLTop(Print *p);
   void printHTMLBottom(Print *p);
   void printHTMLMain(Print *p);
+#ifdef TEMP_SENSOR
+  void printHTMLIAQHistory(Print *p);
+#endif
   void printEnvSensorLabel(char *buf, size_t len);
   void printPowerSensorLabel(char *buf, size_t len);
 

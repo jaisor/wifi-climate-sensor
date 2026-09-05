@@ -98,6 +98,13 @@ values are not interchangeable with BSEC's. Three steps:
 3. **Scoring.** 75% of the score is how close the compensated reading sits to the baseline, 25% is how close humidity
    is to an ideal 40%RH. The combined 0-100 score is inverted onto the 0-500 IAQ scale.
 
+The main page shows all of this in one **Gas & Air Quality** panel: the index and its rating, the raw resistance, the
+humidity-compensated value with the absolute humidity used to correct it, the current clean-air baseline, and how long
+the estimator has been tracking. Below that is a sparkline of the index and the baseline over the last 12 hours, one
+point every 15 minutes. That history is kept in RAM only and restarts on reboot - unlike the baseline itself, which is
+persisted; a buffer that size written at that cadence would wear the flash for little benefit. A device that deep
+sleeps will collect points slowly, one per wake at most.
+
 `iaq_accuracy` mirrors BSEC's field of the same name and says how far the baseline has settled: `0` stabilizing
 (the first 5 minutes are discarded while the heater drifts), `1` uncertain, `2` calibrating after 10 minutes, `3`
 calibrated after 30. Treat the index as meaningless until it reads at least `2`.

@@ -16,6 +16,7 @@
 #include <AsyncJson.h>
 #include <version.h>
 #include "Configuration.h"
+#include "AirQuality.h"
 #include "wifi/WifiManager.h"
 #include "wifi/HTMLAssets.h"
 
@@ -986,38 +987,78 @@ void CWifiManager::printPowerSensorLabel(char *buf, size_t len) {
 #endif
 }
 
-void CWifiManager::printHTMLMain(Print *p) {
+// Elapsed seconds as something readable in a sentence, e.g. "3h 12m"
+static void formatDuration(uint32_t seconds, char *buf, size_t len) {
+  uint32_t days = seconds / 86400;
+  uint32_t hours = (seconds % 86400) / 3600;
+  uint32_t mins = (seconds % 3600) / 60;
+  if (days > 0) {
+    snprintf(buf, len, "%ud %uh", (unsigned)days, (unsigned)hours);
+  } else if (hours > 0) {
+    snprintf(buf, len, "%uh %um", (unsigned)hours, (unsigned)mins);
+  } else {
+    snprintf(buf, len, "%um", (unsigned)mins);
+  }
+}
 
-  char climate[1536] = "";
 #ifdef TEMP_SENSOR
-  {
-    size_t len = 0;
-    bool fresh = false;
-    float pressure = sensorProvider->getBaroPressure(&fresh);
-    if (fresh && pressure > 0) {
-      len += snprintf_P(climate, sizeof(climate), htmlMainPressure, pressure / 100.0f);
-    }
-    float iaq = sensorProvider->getIAQ(&fresh);
-    if (fresh && len < sizeof(climate)) {
-      len += snprintf_P(climate + len, sizeof(climate) - len, htmlMainIAQ,
-        iaq, sensorProvider->getIAQRating(), sensorProvider->getIAQAccuracyText());
-    }
-    float gas = sensorProvider->getGasResistance(&fresh);
-    if (fresh && gas > 0 && len < sizeof(climate)) {
-      snprintf_P(climate + len, sizeof(climate) - len, htmlMainGas, gas / 1000.0f);
+// Two normalized traces over the retained history. Streamed a point at a time rather than
+// composed into a buffer, so nothing large has to live on the stack.
+void CWifiManager::printHTMLIAQHistory(Print *p) {
+
+  uint8_t count = sensorProvider->getIAQHistoryCount();
+  if (count < 2) {
+    p->print(F("<p><small>Collecting history, the first points appear within the hour.</small></p>"));
+    return;
+  }
+
+  // The baseline moves over a narrow range, so it is scaled to its own extremes rather
+  // than to an absolute axis; only its shape is meaningful here.
+  float baseMin = 0, baseMax = 0;
+  for (uint8_t i = 0; i < count; i++) {
+    float b = 0;
+    if (sensorProvider->getIAQHistorySample(i, NULL, &b)) {
+      if (i == 0 || b < baseMin) baseMin = b;
+      if (i == 0 || b > baseMax) baseMax = b;
     }
   }
+  float baseRange = baseMax - baseMin;
+
+  p->print(F("<svg viewBox='0 0 240 60' preserveAspectRatio='none' "
+    "style='width:100%;height:60px;overflow:visible' role='img' "
+    "aria-label='Air quality index and baseline over the retained history'>"));
+
+  // Baseline shape, faint
+  p->print(F("<polyline fill='none' stroke='currentColor' stroke-opacity='0.3' "
+    "stroke-width='1.5' points='"));
+  for (uint8_t i = 0; i < count; i++) {
+    float b = 0;
+    if (!sensorProvider->getIAQHistorySample(i, NULL, &b)) continue;
+    float x = (240.0f * i) / (count - 1);
+    float y = baseRange > 0 ? 55.0f - ((b - baseMin) / baseRange) * 50.0f : 30.0f;
+    p->printf_P(PSTR("%0.1f,%0.1f "), x, y);
+  }
+  p->print(F("'/>"));
+
+  // IAQ on a fixed 0-500 axis, drawn so cleaner air sits higher
+  p->print(F("<polyline fill='none' stroke='currentColor' stroke-width='2' points='"));
+  for (uint8_t i = 0; i < count; i++) {
+    float v = 0;
+    if (!sensorProvider->getIAQHistorySample(i, &v, NULL)) continue;
+    float x = (240.0f * i) / (count - 1);
+    float y = 5.0f + constrain(v / 500.0f, 0.0f, 1.0f) * 50.0f;
+    p->printf_P(PSTR("%0.1f,%0.1f "), x, y);
+  }
+  p->print(F("'/></svg>"));
+
+  char span[32];
+  formatDuration((uint32_t)(count - 1) * IAQ_HISTORY_INTERVAL_SEC, span, sizeof(span));
+  p->printf_P(PSTR("<small>IAQ (solid, higher is cleaner) and baseline (faint) over the last %s. "
+    "History is kept in RAM and restarts on reboot.</small>"), span);
+}
 #endif
 
-  char power[512] = "";
-#ifdef CURRENT_SENSOR
-  if (sensorProvider->isCurrentSensorReady()) {
-    snprintf_P(power, sizeof(power), htmlMainPower,
-      sensorProvider->getLoadVoltage(NULL),
-      sensorProvider->getLoadCurrent(NULL),
-      sensorProvider->getLoadPower(NULL));
-  }
-#endif
+void CWifiManager::printHTMLMain(Print *p) {
 
 #ifdef TEMP_SENSOR
   float t = sensorProvider->getTemperature(NULL);
@@ -1027,9 +1068,55 @@ void CWifiManager::printHTMLMain(Print *p) {
   t = correctT(t);
   h = correctH(h);
 
-  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h, climate, power);
+  p->printf_P(htmlMain, t, configuration.tempUnit == TEMP_UNIT_CELSIUS ? "C" : "F", h);
 #else
-  p->printf_P(htmlMain, 0, "", 0, climate, power);
+  p->printf_P(htmlMain, 0, "", 0);
+#endif
+
+#ifdef TEMP_SENSOR
+  bool fresh = false;
+
+  float pressure = sensorProvider->getBaroPressure(&fresh);
+  if (fresh && pressure > 0) {
+    p->printf_P(htmlMainPressure, pressure / 100.0f);
+  }
+
+  float gas = sensorProvider->getGasResistance(&fresh);
+  if (fresh && gas > 0) {
+    bool iaqFresh = false;
+    float iaq = sensorProvider->getIAQ(&iaqFresh);
+    if (iaqFresh) {
+      char tracked[32];
+      formatDuration(sensorProvider->getIAQTrackedSeconds(), tracked, sizeof(tracked));
+      float absHum = CAirQuality::absoluteHumidity(
+        sensorProvider->getTemperature(NULL), sensorProvider->getHumidity(NULL));
+
+      p->printf_P(htmlMainGasTop,
+        iaq,
+        sensorProvider->getIAQRating(),
+        sensorProvider->getIAQAccuracyText(),
+        tracked,
+        gas / 1000.0f,
+        sensorProvider->getIAQCompensatedGas() / 1000.0f,
+        absHum,
+        sensorProvider->getIAQBaseline() / 1000.0f);
+
+      printHTMLIAQHistory(p);
+      p->print(FPSTR(htmlMainGasBottom));
+    } else {
+      // Sensor present but the estimate has not settled; show the raw reading alone
+      p->printf_P(htmlMainGas, gas / 1000.0f);
+    }
+  }
+#endif
+
+#ifdef CURRENT_SENSOR
+  if (sensorProvider->isCurrentSensorReady()) {
+    p->printf_P(htmlMainPower,
+      sensorProvider->getLoadVoltage(NULL),
+      sensorProvider->getLoadCurrent(NULL),
+      sensorProvider->getLoadPower(NULL));
+  }
 #endif
 }
 

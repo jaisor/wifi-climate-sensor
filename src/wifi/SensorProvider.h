@@ -21,6 +21,11 @@ public:
   virtual uint8_t getIAQAccuracy() { return 0; };
   virtual const char* getIAQRating() { return ""; };
   virtual const char* getIAQAccuracyText() { return ""; };
+  virtual float getIAQBaseline() { return 0; };
+  virtual float getIAQCompensatedGas() { return 0; };
+  virtual uint32_t getIAQTrackedSeconds() { return 0; };
+  virtual uint8_t getIAQHistoryCount() { return 0; };
+  virtual bool getIAQHistorySample(uint8_t i, float *iaq, float *baseline) { return false; };
   virtual uint32_t getDeviceId() { return CONFIG_getDeviceId(); };
   virtual uint32_t getUptime() { return CONFIG_getUpTime(); };
   virtual bool isSensorReady() { return false; };

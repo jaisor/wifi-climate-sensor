@@ -26,6 +26,15 @@
 // A resumed session keeps its restored baseline, so it only needs the heater to settle
 // rather than a full burn-in. A sleeping device is rarely awake long enough for more.
 #define IAQ_RESUME_SETTLE_MS 2000UL
+// Rolling history for the web page. RAM only - the baseline itself is persisted, but a
+// buffer this size would wear the flash if written at this cadence.
+#define IAQ_HISTORY_SIZE 48
+#define IAQ_HISTORY_INTERVAL_SEC 900U // one sample per 15 min, so 12h of history
+
+struct iaqSample_t {
+  float iaq;
+  float baseline;
+};
 
 class CAirQuality {
 
@@ -44,6 +53,10 @@ public:
 
   uint32_t getAccumulatedSeconds() const { return accumulatedSec; };
   bool hasBaseline() const { return baseline > 0; };
+
+  // Oldest first. Returns false once index reaches the number of samples held.
+  uint8_t getHistoryCount() const { return historyCount; };
+  bool getHistorySample(uint8_t index, float *outIaq, float *outBaseline) const;
   // Feed one BME68x reading. Safe to call at any cadence; the baseline adapts on elapsed
   // time rather than sample count, so the read interval does not change the tuning.
   void update(float temperatureC, float humidityPct, float gasResistanceOhms);
@@ -67,6 +80,11 @@ private:
   uint32_t accumulatedSec;   // tracked seconds, carried across sleeps and restarts
   uint32_t pendingElapsedSec; // time asleep, folded into the next update's delta
   bool resumed;              // started from a persisted baseline
+  iaqSample_t history[IAQ_HISTORY_SIZE];
+  uint8_t historyCount;      // valid entries, saturates at IAQ_HISTORY_SIZE
+  uint8_t historyHead;       // next slot to write
+  uint32_t lastHistorySec;   // accumulatedSec at the last recorded sample
+  void recordHistory();
   float baseline;
   float compGas;
   float iaq;
